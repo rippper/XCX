@@ -1,0 +1,59 @@
+<template>
+	<view class="indexCourseItem">
+		<view class="ici_courseImg">
+			<image :src="courseItem.url"></image>
+		</view>
+		<view class="ici_courseInfo">
+			<text class="ici_coursetitle" v-text="courseItem.courseName"></text>
+			<text class="ici_coursescore">学时: {{courseItem.score}} 学时</text>
+			<star-level :score="courseItem.level * 2"></star-level>
+		</view>
+	</view>
+</template>
+
+<script>
+import { starLevel } from '../starLevel/starLevel.nvue'
+	export default {
+		name: 'indexCourseItem',
+		props: {
+			courseItem: Object
+		},
+		components: {
+			starLevel
+		}
+	}
+</script>
+
+<style lang="scss">
+.indexCourseItem{
+	width: 320rpx;
+	margin-right: 19rpx;
+	padding-bottom: 20rpx;
+	& :last-child{
+		margin-right: 30rpx;
+	}
+	.ici_courseImg{
+		width: 320rpx;
+		height: 212rpx;	
+		image{
+			width: 320rpx;
+			height: 212rpx;	
+			border-radius: 15rpx;
+		}
+	}
+	.ici_courseInfo{
+		margin-top: 25rpx;
+		.ici_coursetitle{
+			font-weight: bold;
+		}
+		.ici_coursescore{
+			margin-bottom: 17rpx;
+			font-size: 22rpx;
+			color: #b4b4b4;
+		}
+	}
+}
+.ici_coursetitle{
+	display: block;
+}
+</style>

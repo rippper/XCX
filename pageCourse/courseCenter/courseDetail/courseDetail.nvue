@@ -1,0 +1,41 @@
+<template>
+	<view class="courseDetail">
+		<view class="cd_videopart">
+			<video src="https://vdept.bdstatic.com/3146726e476157596b74754c5a585852/457337654e416a74/5143a2522bcfd36c1ce539ef2ccb78815094256b61529057f372b24d8f60d85bfaa2281a50814b561873bc53cf4475b0.mp4?auth_key=1591847247-0-0-53c5b3f760ccd253bcd28aa75d69a908" controls :enable-progress-gesture="false"></video>
+		</view>
+		<view class="cd_videoinfo">
+			<view class="cd_vi_arttitle">
+				<text class="cd_vi_at_content" v-text="ArticleTitle"></text>
+			</view>
+			<view></view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	data () {
+		return {
+			ArticleTitle: '世卫组织：暂停在“团结试验”中使用羟氯喹'
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.courseDetail{
+	.cd_videopart{
+		video{
+			width: 100%;
+		}
+	}
+	.cd_videoinfo{
+		.cd_vi_arttitle{
+			.cd_vi_at_content{
+				font-size: 46rpx;
+				font-weight: bold;
+			}
+		}
+	}
+}
+</style>

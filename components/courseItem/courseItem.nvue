@@ -1,0 +1,107 @@
+<template>
+	<view class="courseItem" @click="clickLink(courseInfo.Type)">
+		<view class="ci_img">
+			<image :src="courseInfo.CourseImg" v-if="courseInfo.CourseImg" lazy-load="true"></image>
+			<image src="../../static/noCourse.png" mode v-else></image>
+		</view>
+		<view class="ci_courseinfo">
+			<view class="ci_ci_courseTitle" v-text="courseInfo.CourseName"></view>
+			<view class="ci_courseinfo_secoundline">
+				<view class="ci_ci_sl_teacher">讲师：<text v-text="courseInfo.TeacherName"></text></view>
+				<text class="ci_ci_sl_studytype" v-text="courseInfo.studyType"></text>
+			</view>
+			<view class="ci_courseinfo_thirdline">
+				<view class="ci_ci_tl_score">学分：<text v-text="courseInfo.Credit"></text></view>
+				<view class="ci_ci_tl_selectType" v-text="courseInfo.SelectFlag"></view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		props: {
+			courseInfo: Object,
+			default: {}
+		},
+		methods:{
+			clickLink (type) {
+				if (type === "ThreeScreenCourse") {
+					uni.navigateTo({
+						url: '/courseCenter/playJYAicc/playJYAicc?id=' + this.courseInfo.CourseId
+					})
+				} else if (type === "SingleCourse") {
+					uni.navigateTo({
+						url: '/courseCenter/playMp4/playMp4?id=' + this.courseInfo.CourseId
+					})
+				} else {
+					console.log(type)
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+.courseItem{
+	width: 100%;
+	padding: 15rpx 30rpx 15rpx;
+	background: #fff;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	.ci_img{
+		width: 290rpx;
+		image{
+			width: 260rpx;
+			height: 100%;
+		}
+	}
+	.ci_courseinfo{
+		width: 400rpx;
+		.ci_ci_courseTitle{
+			height: 60rpx;
+			line-height: 30rpx;
+			font-size: 26rpx;
+		}
+		.ci_courseinfo_secoundline{
+			height: 36rpx;
+			line-height: 36rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			color: red;
+			.ci_ci_sl_teacher{
+				height: 36rpx;
+				line-height: 36rpx;
+				display: flex;
+				flex-direction: row;
+				color: #666;
+				font-size: 26rpx;
+			}
+			.ci_ci_sl_studytype{
+				font-size: 26rpx;
+			}
+		}
+		.ci_courseinfo_thirdline{
+			height: 36rpx;
+			line-height: 36rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			.ci_ci_tl_score{
+				height: 36rpx;
+				line-height: 36rpx;
+				display: flex;
+				flex-direction: row;
+				color: red;
+				font-size: 26rpx;
+			}
+			.ci_ci_tl_selectType{
+				font-size: 26rpx;
+			}
+		}
+	}
+}
+</style>

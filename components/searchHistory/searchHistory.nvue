@@ -1,0 +1,84 @@
+<template>
+	<view class="searchHistory">
+		<view class="sh_title">
+			<view class="sh_title_left">
+				历史搜索
+			</view>
+			<view class="sh_title_right" @click="deleteHistory">
+				<image src="../../static/lajitong.png"></image>
+			</view>
+		</view>
+		<view class="sh_historyList">
+			<view class="hs_historyList_item" v-for="(item, index) in historyList" :key="index" v-text="item" @click="makeSelect(item)"></view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'searchHistory',
+	data () {
+		return {
+			
+		}
+	},
+	props: {
+		historyList: Array
+	},
+	methods: {
+		makeSelect (item) {
+			this.$emit('makeSelect', item)
+		},
+		deleteHistory () {
+			this.$emit('delete')
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import "../../style/mixin.scss";
+.searchHistory{
+	padding: 30rpx 0;
+	background: #fff;
+	.sh_title{
+		width: 100%;
+		padding: 0 30rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.sh_title_left{
+			font-size: 26rpx;
+		}
+		.sh_title_right{
+			width: 30rpx;
+			height: 30rpx;
+			image{
+				width: 30rpx;
+				height: 30rpx;
+			}	
+		}
+	}
+	.sh_historyList{
+		width: 100%;
+		max-height:500rpx;
+		padding: 30rpx 30rpx 0;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		.hs_historyList_item{
+			max-width: 210rpx;
+			height: 44rpx;
+			line-height: 34rpx;
+			padding: 5rpx 10rpx;
+			margin: 10rpx 10rpx 0;
+			border-radius: 10rpx;
+			font-size: 26rpx;
+			color: #666;
+			background: #ecf1f4;
+			@include ellipsis_two(1);
+		}
+	}
+}
+</style>

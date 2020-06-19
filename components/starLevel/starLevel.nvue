@@ -1,0 +1,47 @@
+<template>
+	<view class="starLevel">
+		<view class="nostar" :class="{ 'halfstar': score == 1, 'allstar': score >= 2 }"></view>
+		<view class="nostar" :class="{ 'halfstar': score == 3, 'allstar': score >= 4 }"></view>
+		<view class="nostar" :class="{ 'halfstar': score == 5, 'allstar': score >= 6 }"></view>
+		<view class="nostar" :class="{ 'halfstar': score == 7, 'allstar': score >= 8 }"></view>
+		<view class="nostar" :class="{ 'halfstar': score == 9, 'allstar': score >= 10 }"></view>
+		<text class="starword">{{score / 2}} 分</text>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'starLevel',
+		props: {
+			score: {
+				type: [String, Number],
+				default: 0
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+.starLevel{
+	display: flex;
+	.nostar{
+		width: 20rpx;
+		height: 20rpx;
+		background: url('../../static/nostar.png') no-repeat;
+		background-size: 100%;
+	}
+	.halfstar{
+		background: url('../../static/halfstar.png') no-repeat;
+		background-size: 100%;
+	}
+	.allstar{
+		background: url('../../static/allstar.png') no-repeat;
+		background-size: 100%;
+	}
+	.starword{
+		margin-left: 5rpx;
+		font-size: 18rpx;
+		color: #fd6103;
+	}
+}
+</style>

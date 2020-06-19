@@ -1,0 +1,311 @@
+<template>
+	<div class="playMp4">
+		<view class="mp4_videopart">
+			<video
+				:src="videoSrc"
+				:show-progress="progressType"
+				@timeupdate="bindtimeupdate"
+				:enable-progress-gesture="false"
+				:initial-time="progressNum"
+				:custom-cache="false"
+				@play="checkPlayTimes"
+				@ended="courseFinish"
+			></video>
+		</view>
+		<view class="mp4_videocontent">
+			<view class="mp4_vc_videotitle">介绍</view>
+			<view class="mp4_vc_videoinfo">
+				<view class="mp4_vc_vi_name" v-text="courseName"></view>
+				<view class="mp4_vc_vi_progress">
+					<text class="mp4_vc_vi_progressname">课程进度:</text>
+					<view class="mp4_vc_vi_progressline">
+						<u-line-progress :striped="true" active-color="#2979ff" :percent="nowprogress" :striped-active="true"></u-line-progress>
+					</view>
+				</view>
+				<view class="mp4_vc_vi_moreInfo">
+					<view class="mvvm_left">
+						<view class="mvvm_left_courseType">
+							<text>课程分类：</text>
+							<text class="courseTypeContent" v-text="courseType"></text>
+						</view>
+						<view class="mvvm_left_time">
+							<text>总时长：</text>
+							<text v-text="courseTime"></text>
+						</view>
+					</view>
+					<view class="mvvm_right">
+						<view class="mvvm_right_teacher">
+							<text>讲师：</text>
+							<text v-text="Teacher"></text>
+						</view>
+						<view class="mvvm_right_score">
+							<text>学时：</text>
+							<text v-text="Score"></text>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+		<view class="mp4_videointroduction">
+			<view class="mp4_vit_title">
+				<text>课程介绍</text>
+			</view>
+			<view class="mp4_vit_content" v-text="Introduction"></view>
+		</view>
+	</div>
+</template>
+
+<script>
+import { GetCourseDetail, UploadTimeNode } from '../../common/getData.js'
+export default {
+	name: 'playMp4',
+	data () {
+		return {
+			courseId: '',
+			videoSrc: '',
+			hasLoad: false,
+			courseName: '',
+			courseType: '',
+			courseTime: '',
+			Teacher: '',
+			Score: '',
+			Introduction: '',
+			progress: 0,	// 后台记录播放进度条(百分比)
+			progressNum: 0, // 后台记录播放进度条(数字)
+			nowprogress: 0, // 当前播放进度条
+			progressType: false,	// 是否显示进度条，同时控制是否提交进度功能
+			upLoading: true,  // 提交进度时修改判断，避免造成多次提交
+			firstTimeToPlay: true  // 判断是否是进入页面首次播放
+		}
+	},
+	onLoad (option) {
+		this.courseId = option.id
+	},
+	onShow () {
+		if (!this.hasLoad) {
+			this.GetCourseDetail()
+		}
+	},
+	onUnload () {
+		console.log('onUnload')
+	},
+	methods: {
+		bindtimeupdate (res) {
+			if (!this.progressType) {
+				this.nowprogress = Math.floor(res.detail.currentTime / res.detail.duration * 10000) / 100  //计算当前进度条
+				if (res.detail.currentTime % 60 <= 1 && !this.upLoading) {
+					this.upLoading = true
+					let time = res.detail.currentTime - res.detail.currentTime % 60
+					let str = this.fillter(time)
+					this.UploadTimeNode(str, res.detail.currentTime)
+				}
+			}
+		},
+		fillter (num) {
+			let sec = Math.floor(num % 60)
+			let min = Math.floor((Math.floor(num) - sec) / 60) % 60
+			let hour = Math.floor((Math.floor(num) - sec) / 60 - min) / 60
+			sec < 10 ? sec = '0' + sec : sec
+			min < 10 ? min = '0' + min : min
+			hour < 10 ? hour = '0' + hour : hour
+			let str = hour.toString() + min.toString() + sec.toString()
+			return str
+		},
+		checkPlayTimes () {
+			if (this.upLoading && this.firstTimeToPlay) {
+				this.firstTimeToPlay = false
+				setTimeout(() => {
+					this.upLoading = false
+				},5000)
+			}
+		},
+		courseFinish () {
+			if (!this.progressType) {
+				let str = this.fillter(Math.floor(res.detail.currentTime))
+				this.UploadTimeNode(str, res.detail.currentTime)
+			}
+		},
+		async GetCourseDetail () {
+			let msg = await GetCourseDetail({
+				Id: this.courseId
+			})
+			if (msg.Type === 1) {
+				this.hasLoad = true
+				this.videoSrc = msg.Data.OnlineUrl
+				this.courseName = msg.Data.CourseName
+				this.courseType = msg.Data.ChannelName
+				this.Score = msg.Data.Credit
+				this.progress = this.nowprogress = msg.Data.BrowseScore.slice(0,-1)
+				this.progressNum = msg.Data.Location
+				this.Teacher = msg.Data.TeacherName
+				this.courseTime = msg.Data.Duration + '分钟'
+				this.Introduction = msg.Data.Description
+				if (this.progress >= 100) {
+					this.progressType = true
+				}
+				console.log(this.progress)
+				console.log(this.nowprogress)
+			}
+			console.log(msg)
+		},
+		async UploadTimeNode (time, currentTime) {
+			let that = this
+			let msg = await UploadTimeNode({
+				CourseId: this.courseId,
+				TimeNode: time
+			})
+			if (msg.Type === 1) {
+				this.progressNum = Math.floor(currentTime)
+				setTimeout(() => {
+					that.upLoading = false
+					console.log(that.upLoading)
+				}, 5000)				
+			} else {
+				console.log(msg.Message)
+			}
+			console.log(msg)
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.playMp4{
+	height: 100vh;
+	.mp4_videopart{
+		height: 30%;
+		video{
+			width: 100%;
+			height: 100%;
+		}
+	}
+	.mp4_videocontent{
+		width: 100%;
+		background: #fff;
+		.mp4_vc_videotitle{
+			width: 100%;
+			height: 80rpx;
+			line-height: 80rpx;
+			padding: 0 30rpx;
+			border-bottom: 1rpx solid #e8e8e8;
+			font-size: 32rpx;
+			text-align: center;
+			&::after{
+				content: '';
+				width: 600rpx;
+				height: 8rpx;
+				background: #2960b2;
+				position: absolute;
+				bottom: 1rpx;
+				left: 75rpx;
+			}
+		}
+		.mp4_vc_videoinfo{
+			.mp4_vc_vi_name{
+				width: 690rpx;
+				max-height: 90rpx;
+				margin: 15rpx auto 0;
+				font-size: 32rpx;
+				@include ellipsis_two(2);
+			}
+			.mp4_vc_vi_progress{
+				width: 690rpx;
+				height: 80rpx;
+				margin: 0 auto;
+				border-bottom: 1rpx solid #e8e8e8;
+				text-align: left;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				.mp4_vc_vi_progressname{
+					width: 22%;
+					font-size: 32rpx;
+					margin-right: 15rpx;
+				}
+				.mp4_vc_vi_progressline{
+					width: 78%;
+					position: relative;
+					bottom: 6rpx;
+				}
+				.u-progress{
+					width: 100%;
+					flex-direction: row;
+				}
+			}
+			.mp4_vc_vi_moreInfo{
+				width: 690rpx;
+				padding: 20rpx 0;
+				margin: 0 auto;
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				.mvvm_left{
+					width: 60%;
+					.mvvm_left_courseType{
+						width: 100%;
+						height: 50rpx;
+						line-height: 50rpx;
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						font-size: 32rpx;
+						@include ellipsis_two(1);
+					}
+					.mvvm_left_time{
+						height: 50rpx;
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						font-size: 32rpx;
+					}
+				}
+				.mvvm_right{
+					width: 40%;
+					.mvvm_right_teacher{
+						height: 50rpx;
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						font-size: 32rpx;
+					}
+					.mvvm_right_score{
+						height: 50rpx;
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						font-size: 32rpx;
+					}
+				}
+			}
+		}
+	}
+	.mp4_videointroduction{
+		padding: 30rpx 0;
+		margin-top: 20rpx;
+		background: #fff;
+		.mp4_vit_title{
+			width: 690rpx;
+			margin: 0 auto;
+			font-size: 32rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			&:before{
+				content: '';
+				width: 8rpx;
+				height: 26rpx;
+				margin-right: 10rpx;
+				background: #2960b2;
+				display: block;
+			}
+		}
+		.mp4_vit_content{
+			width: 690rpx;
+			margin: 0 auto;
+			font-size: 32rpx;
+			text-indent: 2rem;
+		}
+	}
+}
+</style>

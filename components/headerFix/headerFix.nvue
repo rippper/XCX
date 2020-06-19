@@ -1,0 +1,57 @@
+<template>
+	<view class="headerFix">
+		<view class="hf_title_status" :style="'height:' + height + 'px'"></view>
+		<view class="hf_title_content">
+			<view class="hf_title_content_btnpart">
+				<slot></slot>
+			</view>
+			<view class="hf_title_content_title" v-text="title"></view>
+			<view class="hf_title_content_rightpart"></view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'headerFix',
+		props: {
+			height: [String, Number],
+			title: String
+		}
+	}
+</script>
+
+<style lang="scss">
+.headerFix{
+	width: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	.hf_title_status{
+		background: #2960b2;
+	}
+	.hf_title_content{
+		display: flex;
+		flex-direction: row;
+		height: 44px;
+		line-height: 44px;
+		background: #2960b2;
+		.hf_title_content_btnpart{
+			flex: 1;
+			position: relative;
+		}
+		.hf_title_content_title{
+			flex: 1;
+			line-height: 40px;
+			text-align: center;
+			font-size: 32rpx;
+			font-weight: bold;
+			color: #fff;
+		}
+		.hf_title_content_rightpart{
+			flex: 1;
+		}
+	}
+}
+</style>

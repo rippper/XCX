@@ -1,0 +1,35 @@
+<template>
+	<view class="ebl_outbox">
+		<view class="ebl_elcbookimg">
+			<image :src="bookItem.bookImg"></image>
+		</view>
+		<text v-text="bookItem.Title"></text>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'elcBookList',
+		props: {
+			bookItem: Object
+		}
+	}
+</script>
+
+<style lang="scss">
+.ebl_outbox{
+	width: 190rpx;
+	padding-bottom: 70rpx;
+	margin: 0 30rpx;
+	.ebl_elcbookimg{
+		image{
+			width: 190rpx;
+			height: 260rpx;	
+		}
+	}
+	text{
+		font-size: 26rpx;
+		font-weight: bold;
+	}
+}
+</style>

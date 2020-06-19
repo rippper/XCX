@@ -1,0 +1,189 @@
+<template>
+	<view class="courseSearch">
+		<view class="cs_searchpart">
+			<u-search placeholder="请输入课程名称" v-model="Keyword" :clearabled="true" @search="selectHistory" @custom="selectHistory"></u-search>
+		</view>
+		<search-history class="search_history" :historyList="courseHistory" :class="{ 'history_disappear': searched }" @makeSelect="selectHistory" @delete="deleteHistory"></search-history>
+		<scroll-view scroll-y class="cs_courseresult" :class="{ 'couresult_disappear': !searched, 'cr_noDataBg': noDataBg }" @scrolltolower="GetCourseInfoList">
+			<courseItem v-for="(item, index) in courseList" :key="index" :courseInfo="item"></courseItem>
+			<u-loadmore :class="{ 'cs_noData': noData }" :status="status"/>
+		</scroll-view>
+		<u-toast ref="uToast" />
+	</view>
+</template>
+
+<script>
+import searchHistory from '../../components/searchHistory/searchHistory.nvue'
+import courseItem from '../../components/courseItem/courseItem.nvue'
+import { GetCourseInfoList } from '../../common/getData.js'
+import { imgAddress } from '../../common/plugin.js'
+
+export default {
+	name: 'courseSearch',
+	data () {
+		return {
+			Keyword: '',
+			courseHistory: '',
+			courseList: [],
+			Page: 1,
+			Rows: 10,
+			totalCount: 0,
+			noData: false,
+			noDataBg: false,
+			searched: false, //课程列表和历史纪录界面切换
+			inTheEnd: false, // 是否到达底部
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onShow () {
+		this.getHistory()
+	},
+	methods: {
+		linkToList (value) {
+			this.Keyword = value
+			let num = ''
+			let repeat = this.courseHistory.some((item, index) => {
+				if (item == value) {
+					num = index
+					return true
+				}
+			})
+			
+			if (repeat) {
+				this.courseHistory.splice(num, 1)
+				this.courseHistory.unshift(value)
+				uni.setStorageSync('courseHistory', this.courseHistory)
+				this.GetCourseInfoList()
+				return false
+			}
+			if (this.courseHistory.length > 12) {
+				this.courseHistory.pop()
+				this.courseHistory.unshift(value)
+				uni.setStorageSync('courseHistory', this.courseHistory)
+				
+			} else {
+				this.courseHistory.unshift(value)
+				uni.setStorageSync('courseHistory', this.courseHistory)
+			}
+			this.GetCourseInfoList()
+		},
+		getHistory () {
+			let arr = uni.getStorageSync('courseHistory')
+			Array.isArray(arr) ? this.courseHistory = arr : this.courseHistory = []
+		},
+		selectHistory (value) {
+			if (value == '') {
+				this.$refs.uToast.show({
+					title: '请输入课程名称',
+					type: 'warning',
+					icon: false,
+					position: 'bottom'
+				})
+				return false
+			}
+			this.Page = 1
+			this.status = 'loading'
+			this.noDataBg = false
+			this.inTheEnd = false
+			this.totalCount = 0
+			this.courseList = []
+			this.linkToList(value)
+		},
+		deleteHistory () {
+			this.courseHistory = []
+			uni.removeStorageSync('courseHistory')
+		},
+		async GetCourseInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetCourseInfoList({
+				Keyword: this.Keyword,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.searched = true
+				this.totalCount = msg.Data.TotalCount
+				console.log(msg.Data.List.length)
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					this.noData = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : ''
+				})
+				this.courseList = [...this.courseList, ...msg.Data.List]
+				if (this.courseList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page +=1
+			}
+		}
+	},
+	components: {
+		searchHistory
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.courseSearch{
+	height: 100vh;
+	.cs_searchpart{
+		width: 100%;
+		padding: 20rpx;
+		background: #fff;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	.search_history{
+		margin-top: 120rpx;
+	}
+	.history_disappear{
+		display: none;
+	}
+	.u-search{
+		flex-direction: row;
+	}
+	.u-content{
+		flex-direction: row;
+	}
+	.cs_courseresult{
+		height: 100%;
+		padding-top: 104rpx;
+		background: #fff;
+		.cs_noData{
+			display: none;
+		}
+		.u-load-more-wrap{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-around;
+		}
+		.u-load-more-inner{
+			flex-direction: row;
+			align-items: center;
+			height: 80rpx;
+		}
+	}
+	.couresult_disappear{
+		display: none;
+	}
+	.cr_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+
+</style>

@@ -1,0 +1,131 @@
+<template>
+	<view class="myscore">
+		<view class="pcms_firstpart">
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					用户名
+				</view>
+				<view class="ms_scoreItem_content" v-text="userName"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					单位
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem ms_scoreItemlast">
+				<view class="ms_scoreItem_title">
+					用户职务
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+		</view>
+		<view class="pcms_firstpart">
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					必修课程学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					选修课程学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					考试获得学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					培训获得学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem ms_scoreItemlast">
+				<view class="ms_scoreItem_title">
+					获得总学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+		</view>
+		<view class="pcms_lastpart">
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					要求必修学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					要求总学时
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem">
+				<view class="ms_scoreItem_title">
+					考核结果
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+			<view class="ms_scoreItem ms_scoreItemlast">
+				<view class="ms_scoreItem_title">
+					您的学时排名
+				</view>
+				<view class="ms_scoreItem_content"></view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'myScore',
+		data () {
+			return {
+				userName: 'zyb'
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+.myscore{
+	height: 100vh;
+	overflow: auto;
+	background: #e8e8e8;
+	.pcms_firstpart{
+		margin-bottom: 20rpx;
+		background: #fff;
+	}
+	.pcms_lastpart{
+		background: #fff;
+	}
+	.ms_scoreItem{
+		width: 690rpx;
+		height: 110rpx;
+		padding-bottom: 10rpx;
+		margin: 0 auto;
+		border-bottom: 1rpx solid #e8e8e8;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		.ms_scoreItem_title{
+			padding-left: 10rpx;
+			font-size: 32rpx;
+			color: #000;
+		}
+		.ms_scoreItem_content{
+			font-size: 32rpx;
+			color: #888;
+		}
+	}
+	.ms_scoreItemlast{
+		border-bottom: none;
+	}
+}
+</style>

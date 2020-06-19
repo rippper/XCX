@@ -1,0 +1,55 @@
+<template>
+	<view class="cellBtn">
+		<view class="ci_linkpart" @click="clickToLink">
+			<view class="cellBtn_icon">
+				<slot name="iconpart"></slot>
+			</view>
+			<view class="cellBtn_title" v-text="title"></view>
+			<view class="cellBtn_arrows">
+				<u-icon name="arrow-right" color="#606266" size="32"></u-icon>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'cellBtn',
+		props: {
+			title: String,
+			isLink: Boolean,
+			to: String
+		},
+		methods: {
+			clickToLink () {
+				if (this.isLink) {
+					uni.navigateTo({
+						url: this.to
+					})
+				} else {
+					return false
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+.cellBtn{
+	height: 96rpx;
+	border-bottom: 1rpx solid #e8e8e8;
+	.ci_linkpart{
+		height: 100%;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		.cellBtn_icon{
+			width: 100rpx;
+			text-align: center;
+		}
+		.cellBtn_title{
+			width: 540rpx;
+		}
+	}
+}
+</style>

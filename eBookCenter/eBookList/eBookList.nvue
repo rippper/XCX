@@ -1,0 +1,99 @@
+<template>
+	<view class="eBookList">
+		<header-fix :height="height" title="电子书列表">
+			<view class="ebl_btn">
+				<view class="ebl_btn_type" @click="goBack">
+					<image src="../../static/list.png"></image>
+				</view>
+				<view class="ebl_btn_centerline"></view>
+				<view class="ebl_btn_search" @click="courseSearch">
+					<image src="../../static/fangdajing.png"></image>
+				</view>
+			</view>
+		</header-fix>
+	</view>
+</template>
+
+<script>
+import headerFix from '../../components/headerFix/headerFix.nvue'
+
+export default {
+	name: 'eBookList',
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+	},
+	data () {
+		return {
+			winH: '',
+			height: ''
+		}
+	},
+	methods: {
+		goBack () {
+			uni.navigateBack()
+		}
+	},
+	components: {
+		headerFix
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookList{
+	width: 100%;
+	overflow: hidden;
+	background: #fff;
+	.ebl_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.ebl_btn_type{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width:16px;
+				height: 16px;
+			}
+		}
+		.ebl_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.ebl_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+}
+</style>

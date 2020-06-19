@@ -1,0 +1,98 @@
+<template>
+	<view class="personalCenter">
+		<view class="pc_usertop">
+			<view class="pc_ut_infopart">
+				<image src="../../../static/person_cener_avatar.png"></image>
+				<view class="pc_ut_infopartword">
+					<view class="pc_ut_ipw_username" v-text="userName"></view>
+					<view class="pc_ut_ipw_score">学时: {{score}}</view>
+				</view>
+			</view>
+		</view>
+		<view class="pc_cell_list">
+			<view class="pc_cell_firstpart">
+				<cell-btn title="我的学时" is-link to="/personalCenter/myScore/myScore">
+					<u-icon name="clock" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				</cell-btn>
+				<cell-btn title="我的课程" is-link to="/personalCenter/myCourse/myCourse">
+					<u-icon name="play-circle" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				</cell-btn>
+				<cell-btn title="我的考试" is-link to="/courseCenter/playJYAicc/playJYAicc">
+					<u-icon name="file-text" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				</cell-btn>
+			</view>
+		</view>
+		<view class="pc_cell_list">
+			<view class="pc_cell_secoundpart">
+				<cell-btn title="设置" is-link to="/courseCenter/playMp4/playMp4">
+					<u-icon name="setting" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				</cell-btn>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import cellBtn from '../../../components/cellBtn/cellBtn.nvue'
+export default {
+	name: 'personalCenter',
+	data () {
+		return {
+			userName: 'zyb',
+			score: 10
+		}
+	},
+	components: {
+		cellBtn
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../../style/mixin.scss';
+.personalCenter{
+	height: 100vh;
+	background: #ecf1f4;
+	.pc_usertop{
+		width: 100%;
+		height: 391rpx;
+		background-color: #fff;
+		@include setBackground('person_center_bg.png');
+		background-size: 100%;
+		.pc_ut_infopart{
+			width: 100%;
+			height: 391rpx;
+			padding: 0 30rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			@include setBackground('person_center_bg.png');
+			background-size: 100% 100%;
+			background-color: rgba(256, 256, 256, 0);
+			image{
+				width:128rpx;
+				height: 128rpx;
+			}
+			.pc_ut_infopartword{
+				height: 128rpx;
+				padding-left: 30rpx;
+				margin-top: 60rpx;
+				.pc_ut_ipw_username{
+					margin-bottom: 30rpx;
+					font-size: 36rpx;
+					color: #fff;
+				}
+				.pc_ut_ipw_score{
+					font-size: 30rpx;
+					color: #fff;
+				}
+			}
+		}
+	}
+	.pc_cell_list{
+		padding: 0 30rpx;
+		background: #fff;
+		margin-bottom: 25rpx;
+	}
+}
+</style>

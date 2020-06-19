@@ -1,0 +1,170 @@
+<template>
+	<view class="mycourse" :style="'margin-top:' + (height + 44) + 'px'" ref="courseCenter">
+		<view class="mc_title">
+			<view class="mc_title_status" :style="'height:' + height + 'px'"></view>
+			<view class="mc_title_content">
+				<view class="mc_title_content_btnpart">
+					<view class="mtcb_btn" @click="goBack"></view>
+				</view>
+				<view class="mc_title_content_title">我的课程</view>
+				<view class="mc_title_content_rightpart"></view>
+			</view>
+		</view>
+		<view class="mc_content">
+			<view class="mc_content_utabs" :style="'top:' + (height + 44) + 'px'">
+				<u-tabs-swiper ref="uTabs" :list="list" :is-scroll="false" :current="current" @change="tabsChange"></u-tabs-swiper>
+			</view>
+			<swiper :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish" :style="'height:' + (winH - height - 44) + 'px'">
+				<swiper-item class="swiper-item">
+					<!-- <view class="swiper-item-one"></view> -->
+					<scroll-view scroll-y class="swiper-item-one" @scrolltolower="getUnFinishCourse"></scroll-view>
+				</swiper-item>
+				<swiper-item class="swiper-item">
+					<scroll-view scroll-y class="swiper-item-two" @scrolltolower="getUnFinishCourse"></scroll-view>
+				</swiper-item>
+			</swiper>
+		</view>
+	</view>
+</template>
+
+<script>
+import { GetUserCourseInfoList } from '../../common/getData.js';
+export default {
+	name: 'myCourse',
+	data () {
+		return {
+			height: '',
+			winH: '',
+			list: [{
+				name: '已完成'
+			}, {
+				name: '未完成'
+			}],
+			current: 0,
+			swiperCurrent: 0,
+			unFinishPage: 1,
+			finishPage: 1,
+			Rows: 10
+		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.getUnFinishCourse()
+	},
+	methods: {
+		goBack () {
+			uni.navigateBack({
+				url: 'pages/tabBar/personalCenter/personalCenter'
+			})
+		},
+		tabsChange(index) {
+			this.swiperCurrent = index;
+		},
+		transition(e) {
+			let dx = e.detail.dx;
+			this.$refs.uTabs.setDx(dx);
+		},
+		animationfinish(e) {
+			let current = e.detail.current;
+			this.$refs.uTabs.setFinishCurrent(current);
+			this.swiperCurrent = current;
+			this.current = current;
+		},
+		async getUnFinishCourse () {
+			let msg = await GetUserCourseInfoList({
+				Finish: 0,
+				Page: this.unFinishPage,
+				Rows: this.Rows
+			})
+			console.log(msg)
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.mycourse{
+	.mc_title{
+		width: 100%;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 100;
+		.mc_title_status{
+			background: #2960b2;
+		}
+		.mc_title_content{
+			display: flex;
+			flex-direction: row;
+			height: 44px;
+			line-height: 44px;
+			background: #2960b2;
+			.mc_title_content_btnpart{
+				flex: 1;
+				position: relative;
+				.mtcb_btn{
+					width: 81px;
+					height: 30px;
+					margin: auto;
+					border: 1rpx solid #999;
+					border-radius: 58rpx;
+					background: rgba(0,0,0,0.2);
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					left: 0;
+					overflow: hidden;
+					display: flex;
+					flex-direction: row;
+					justify-content: space-between;
+					align-items: center;
+				}
+			}
+			.mc_title_content_title{
+				flex: 1;
+				line-height: 40px;
+				text-align: center;
+				font-size: 32rpx;
+				font-weight: bold;
+				color: #fff;
+			}
+			.mc_title_content_rightpart{
+				flex: 1;
+			}
+		}
+	}
+	.mc_content{
+		width: 100%;
+		.mc_content_utabs{
+			width: 100%;
+			position: fixed;
+			left: 0;
+			z-index: 50;
+		}
+		.u-tabs-scorll-flex{
+			flex-direction: row;
+		}
+		.swiper-item{
+			width: 100%;
+			padding-top: 80rpx;
+			background-color: #ff0;
+			.swiper-item-one{
+				width: 100%;
+				height: 100%;
+				background: #000;
+			}
+			.swiper-item-two{
+				width: 100%;
+				height: 100%;
+				background: #0f0;
+			}
+		}
+	}
+}
+</style>

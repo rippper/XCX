@@ -1,0 +1,411 @@
+<template>
+	<view class="playJYAicc">
+		<view class="jya_videopart">
+			<video
+				:src="currentCoursePackage.Mp4"
+				controls
+				:show-progress="progressType"
+				:enable-progress-gesture="false"
+				:custom-cache="false"
+				@timeupdate="bindtimeupdate"
+				@ended="courseFinish"
+			></video>
+		</view>
+		<view class="jya_contentpart">
+			<view class="jya_cp_nav">
+				<u-tabs-swiper ref="uTabs" :list="list" :is-scroll="false" :current="current" @change="tabsChange"></u-tabs-swiper>
+			</view>
+			<view class="jya_cp_body">
+				<swiper class="jya_cp_swiper" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
+					<swiper-item class="swiper-item">
+						<scroll-view scroll-y class="jya_introduction">
+							<view class="jya_it_name" v-text="courseName"></view>
+							<view class="jya_vc_vi_progressout">
+								<view class="jya_vc_vi_progress">
+									<text class="jya_vc_vi_progressname">当前课程进度:</text>
+									<view class="jya_vc_vi_progressline">
+										<u-line-progress :striped="true" active-color="#2979ff" :percent="nowprogress" :striped-active="true"></u-line-progress>
+									</view>
+								</view>
+								<view class="jya_vc_vi_progress">
+									<text class="jya_vc_vi_progressname">全部课程进度:</text>
+									<view class="jya_vc_vi_progressline">
+										<u-line-progress :striped="true" active-color="#2979ff" :percent="allProgress" :striped-active="true"></u-line-progress>
+									</view>
+								</view>
+							</view>
+							<view class="jya_vc_vi_moreInfo">
+								<view class="jvvm_left">
+									<view class="jvvm_left_courseType">
+										<text>课程分类：</text>
+										<text v-text="courseType"></text>
+									</view>
+									<view class="jvvm_left_time">
+										<text>总时长：</text>
+										<text v-text="courseTime"></text>
+									</view>
+								</view>
+								<view class="jvvm_right">
+									<view class="jvvm_right_teacher">
+										<text>讲师：</text>
+										<text v-text="Teacher"></text>
+									</view>
+									<view class="jvvm_right_score">
+										<text>学时：</text>
+										<text v-text="Score"></text>
+									</view>
+								</view>
+							</view>
+							<view class="jya_videointroduction">
+								<view class="jya_vit_title">
+									<text>课程介绍</text>
+								</view>
+								<view class="jya_vit_content" v-text="Introduction"></view>
+							</view>
+						</scroll-view>
+					</swiper-item>
+					<swiper-item class="swiper-item">
+						<scroll-view scroll-y class="swiper-item-two">
+							<view class="jya_vit_courseitem" v-for="(item, index) in contextList" :key="index" @click="changePackage(item)">
+								<view class="jya_vit_courseName" :class="{ 'jya_vit_courseIsSelect': item.isSelect}" v-text="item.NodeName"></view>
+								<view class="jya_vit_courseType">
+									<text v-show="item.Status === 'UnFinish' || item.Status === ''">未完成</text>
+									<text class="jya_vit_courseType_finish" v-show="item.Status === 'C'">已完成</text>
+								</view>
+							</view>
+						</scroll-view>
+					</swiper-item>
+				</swiper>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import { GetCourseDetail, SyncUserStudyDataXCX } from '../../common/getData.js'
+import { simpleCopy } from '../../common/plugin.js'
+export default {
+	name: 'playJYAicc',
+	data () {
+		return {
+			courseId: '',
+			list: [{
+				name: '简介'
+			}, {
+				name: '目录'
+			}],
+			current: 0,
+			swiperCurrent: 0,
+			courseName: '领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范',
+			currentCoursePackage: '',  // 当前课程包内容
+			nowprogress: 0, // 当前段落课程进度
+			currentTime: 0, // 当前课程进度时间
+			progressType: false, // 视频进度条显示
+			allProgress: 0, // 本门课程总进度条
+			courseType: '国家政治',
+			courseTime: '45分钟',
+			Teacher: '任进',
+			Score: '0.5',
+			Introduction: '这是介绍',
+			contextList: [],
+			hasLoad: false // 检测是否调取过课程数据加载接口
+		}
+	},
+	onLoad (option) {
+		this.courseId = option.id
+	},
+	onShow () {
+		if (!this.hasLoad) {
+			this.GetCourseDetail()
+		}
+	},
+	methods: {
+		tabsChange(index) {
+			this.swiperCurrent = index;
+		},
+		transition(e) {
+			let dx = e.detail.dx;
+			this.$refs.uTabs.setDx(dx);
+		},
+		animationfinish(e) {
+			let current = e.detail.current;
+			this.$refs.uTabs.setFinishCurrent(current);
+			this.swiperCurrent = current;
+			this.current = current;
+		},
+		bindtimeupdate (res) {
+			if (!this.progressType) {
+				this.nowprogress = Math.floor(res.detail.currentTime / res.detail.duration * 10000) / 100  //计算当前进度条
+				this.currentTime = res.detail.currentTime
+			}
+		},
+		courseFinish () {
+			if (this.currentCoursePackage.Status === 'C') {
+				return false
+			} else {
+				this.SyncUserStudyDataXCX(this.currentCoursePackage.NodeId, this.currentTime, 'C')
+			}
+		},
+		changePackage (item) {
+			this.currentCoursePackage = item
+			this.nowprogress = 0
+			this.currentTime = 0
+			if (item.Status === 'C') {
+				this.progressType = true
+				this.nowprogress = 100
+			} else {
+				this.progressType = false
+			}
+			console.log()
+		},
+		async GetCourseDetail () {
+			let msg = await GetCourseDetail({
+				Id: this.courseId
+			})
+			if (msg.Type === 1) {
+				this.hasLoad = true
+				this.courseName = msg.Data.CourseName
+				this.courseType = msg.Data.ChannelName
+				this.Teacher = msg.Data.TeacherName
+				this.courseTime = msg.Data.Duration + '分钟'
+				this.Score = msg.Data.Credit
+				this.Introduction = msg.Data.Description
+				this.allProgress = msg.Data.BrowseScore.slice(0,-1)
+				msg.Data.NodeList.forEach(item => {
+					item.isSelect = false
+				})
+				this.contextList = msg.Data.NodeList
+				console.log(this.contextList)
+				this.contextList.some((item, index) => {
+					if (item.Status !== 'C') {
+						let obj = simpleCopy(item)
+						obj.isSelect = true
+						this.$set(this.contextList, index, obj)
+						return this.currentCoursePackage = item
+					} else if (this.contextList.length == index + 1 && item.Status === 'C') {
+						let obj = simpleCopy(this.contextList[0])
+						obj.isSelect = true
+						this.$set(this.contextList, 0, obj)
+						return this.currentCoursePackage = this.contextList[0]
+					}
+				})
+			}
+			console.log(msg)
+		},
+		async SyncUserStudyDataXCX (NodeId, Time, Status) {
+			let msg = await SyncUserStudyDataXCX({
+				courseId: this.courseId,
+				Time: Math.floor(Time),
+				NodeId,
+				Status
+			})
+			if (msg.Type === 1) {
+				if (msg.Data.pass) {
+					this.allProgress = Math.floor(msg.Data.CurrentProgress)
+					this.
+					this.contextList.forEach(item => {
+						if (item.NodeId == NodeId) {
+							item.Status = 'C'
+						}
+						item.isSelect = false
+					})
+					this.contextList.some((item, index) => {
+						if (item.Status !== 'C') {
+							let obj = simpleCopy(item)
+							obj.isSelect = true
+							this.$set(this.contextList, index, obj)
+							this.currentTime = 0
+							return this.currentCoursePackage = item
+						} else if (this.contextList.length == index + 1 && item.Status === 'C') {
+							let obj = simpleCopy(this.contextList[0])
+							obj.isSelect = true
+							this.$set(this.contextList, 0, obj)
+							this.currentTime = 100
+							return this.currentCoursePackage = this.contextList[0]
+						}
+					})
+				}
+			}
+			
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.playJYAicc{
+	width: 100%;
+	height: 100vh;
+	.jya_videopart{
+		width: 100%;
+		height: 30%;
+		video{
+			width: 100%;
+			height: 100%;
+		}
+	}
+	.jya_contentpart{
+		width: 100%;
+		height: 70%;
+		position: relative;
+		.jya_cp_nav{
+			width: 100%;
+			border-bottom: 1rpx solid #e8e8e8;
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: 99;
+			.u-tabs-scorll-flex{
+				flex-direction: row;
+			}
+		}
+		.jya_cp_body{
+			width: 100%;
+			height: 100%;
+			padding-top: 80rpx;
+			.jya_cp_swiper{
+				height:100%;
+			}
+			.swiper-item{
+				width: 100%;
+			}
+			.jya_introduction{
+				width: 100%;
+				height: 100%;
+				.jya_it_name{
+					width: 100%;
+					max-height: 105rpx;
+					padding: 15rpx 30rpx 0;
+					background: #fff;
+					font-size: 32rpx;
+					@include ellipsis_two(2);
+				}
+				.jya_vc_vi_progressout{
+					width: 100%;
+					padding: 0 30rpx;
+					background: #fff;
+				}
+				.jya_vc_vi_progress{
+					width: 100%;
+					height: 80rpx;
+					border-bottom: 1rpx solid #e8e8e8;
+					text-align: left;
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+				}
+				.jya_vc_vi_progressname{
+					width: 30%;
+					font-size: 32rpx;
+					margin-right: 15rpx;
+				}
+				.jya_vc_vi_progressline{
+					width: 70%;
+					position: relative;
+					bottom: 6rpx;
+				}
+				.u-progress{
+					width: 100%;
+					flex-direction: row;
+				}
+				.jya_vc_vi_moreInfo{
+					width: 100%;
+					padding: 20rpx 30rpx;
+					background: #fff;
+					display: flex;
+					flex-direction: row;
+					justify-content: space-between;
+					.jvvm_left{
+						.jvvm_left_courseType{
+							height: 50rpx;
+							display: flex;
+							flex-direction: row;
+							align-items: center;
+							font-size: 32rpx;
+						}
+						.jvvm_left_time{
+							height: 50rpx;
+							display: flex;
+							flex-direction: row;
+							align-items: center;
+							font-size: 32rpx;
+						}
+					}
+					.jvvm_right{
+						.jvvm_right_teacher{
+							height: 50rpx;
+							display: flex;
+							flex-direction: row;
+							align-items: center;
+							font-size: 32rpx;
+						}
+						.jvvm_right_score{
+							height: 50rpx;
+							display: flex;
+							flex-direction: row;
+							align-items: center;
+							font-size: 32rpx;
+						}
+					}
+				}
+				.jya_videointroduction{
+					padding: 30rpx 0;
+					margin-top: 20rpx;
+					background: #fff;
+					.jya_vit_title{
+						width: 690rpx;
+						margin: 0 auto;
+						font-size: 32rpx;
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						&:before{
+							content: '';
+							width: 8rpx;
+							height: 26rpx;
+							margin-right: 10rpx;
+							background: #2960b2;
+							display: block;
+						}
+					}
+					.jya_vit_content{
+						width: 690rpx;
+						margin: 0 auto;
+						font-size: 32rpx;
+						text-indent: 2rem;
+					}
+				}
+			}
+			.swiper-item-two{
+				width: 100%;
+				height: 100%;
+				.jya_vit_courseitem{
+					width: 100%;
+					padding: 20rpx 30rpx;
+					background: #fff;
+					border-bottom: 1rpx solid #e8e8e8;
+					display: flex;
+					flex-direction: row;
+					justify-content: space-between;
+					align-items: center;
+					.jya_vit_courseName{
+						width: 70%;
+						font-size: 32rpx;
+					}
+					.jya_vit_courseIsSelect{
+						color: #f00;
+					}
+					.jya_vit_courseType{
+						font-size: 26rpx;
+						color: #888;
+						.jya_vit_courseType_finish{
+							color: #01dd99;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+</style>

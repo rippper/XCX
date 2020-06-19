@@ -1,0 +1,139 @@
+<template>
+	<view class="loadMore" :class="{ 'disNone': isShow === true, 'boxDisappear': isShow === false }" @touchmove.stop.prevent="stopScroll">
+		<scroll-view scroll-y class="lm_list">
+			<view class="loadMore_center">
+				<view class="lm_centercircle">
+					<u-loading mode="circle" color="red" size="80"></u-loading>
+				</view>
+				<text class="loadMore_load">loading...</text>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+export default {
+	props: {
+		isShow: {
+			type: [Boolean, String],
+			default: 'none'
+		}
+	},
+	methods: {
+		stopScroll () {
+			return false
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.loadMore{
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0.2);
+	position: fixed;
+	top: 0;
+	left: 0;
+	opacity: 0;
+	display: none;
+	.lm_list{
+		width: 100%;
+		height: 100%;
+	}
+	.loadMore_center{
+		width: 200rpx;
+		height: 250rpx;
+		border-radius: 15rpx;
+		background: rgba(0,0,0,0.5);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		margin: auto;
+		.lm_centercircle{
+			width: 80rpx;
+			height: 80rpx;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 60rpx;
+			left: 0;
+			margin: auto;
+		}
+		.loadMore_load{
+			margin-top: 170rpx;
+			color: #fff;
+			text-align: center;
+		}
+	}
+}
+.disNone{
+	display: block;
+	z-index: 99;
+	-webkit-animation-name: fadeIn; /*动画名称*/
+	-webkit-animation-duration: 0.3s; /*动画持续时间*/
+	-webkit-animation-iteration-count: 1; /*动画次数*/
+	-webkit-animation-delay: 0s; /*延迟时间*/
+	-webkit-animation-fill-mode: forwards;
+}
+.boxDisappear{
+	display: block;
+	z-index: 99;
+	-webkit-animation-name: fadeOut; /*动画名称*/
+	-webkit-animation-duration: 0.3s; /*动画持续时间*/
+	-webkit-animation-iteration-count: 1; /*动画次数*/
+	-webkit-animation-delay: 0s; /*延迟时间*/
+	-webkit-animation-fill-mode: forwards;
+}
+@-webkit-keyframes fadeIn {
+	0% {
+		opacity: 0;
+	}
+	20%{
+		opacity: .2;
+	}
+	50% {
+		opacity: .5;
+	}
+	70%{
+		opacity: .7;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+@-webkit-keyframes fadeOut {
+	0% {
+		visibility: visible;
+		height: 100%;
+		opacity: 1;
+	}
+	20% {
+		visibility: visible;
+		height: 100%;
+		opacity: .8;
+	}
+	50%{
+		visibility: visible;
+		height: 100%;
+		opacity: .5;
+	}
+	70%{
+		visibility: visible;
+		height: 100%;
+		opacity: .3;
+	}
+	99% {
+		visibility: visible;
+		height: 100%;
+		opacity: 0;
+	}
+	100%{
+		visibility: hidden;
+		height: 0;
+		opacity: 0;
+	}
+}
+</style>

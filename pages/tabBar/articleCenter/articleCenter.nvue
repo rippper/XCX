@@ -1,0 +1,15 @@
+<template>
+	<view class="articleCenter">
+		<text>这是文章中心页面</text>
+	</view>
+</template>
+
+<script>
+	export default {
+		
+	}
+</script>
+
+<style lang="scss">
+
+</style>

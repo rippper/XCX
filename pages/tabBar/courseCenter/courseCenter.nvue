@@ -1,0 +1,313 @@
+<template>
+	<view class="courseCenter" :style="'margin-top:' + (height + 44) + 'px'" ref="courseCenter">
+		<header-fix :height="height" title="课程中心">
+			<view class="ctcb_btn">
+				<view class="ctcb_btn_type" @click="listChange">
+					<image src="../../../static/list.png"></image>
+				</view>
+				<view class="ctcb_btn_centerline"></view>
+				<view class="ctcb_btn_search" @click="courseSearch">
+					<image src="../../../static/fangdajing.png"></image>
+				</view>
+			</view>
+		</header-fix>
+		<view class="cc_courselist" :class="{ 'cc_courselist_open': channelType }">
+			<scroll-view class="cc_channnelpart" scroll-y :style="'height:' + (winH - (height + 44)) + 'px'">
+				<view 
+					class="cc_cp_item"
+					v-for="(item, index) in channelList"
+					:key="index"
+					@click="changeCourseList(item.Id)"
+				>
+					<text class="cc_cp_itemName" v-text="item.Name"></text>
+				</view>
+			</scroll-view>
+			<scroll-view class="cc_svpart" :class="{ 'cc_noDataBg': noDataBg }" scroll-y @scrolltolower="getCourseInfoList" :style="'height:' + (winH - (height + 44)) + 'px'">
+				<view class="cc_svpart_inner">
+					<course-item v-for="(item, index) in courseList" :key="index" :courseInfo="item"></course-item>
+					<view class="cc_noData" v-show="noData">已经没有更多的内容了</view>
+				</view>
+			</scroll-view>
+			<view class="cc_coverbg" :class="{ 'disNone': channelType, 'boxDisappear': !channelType }" @click="listChange"></view>
+		</view>
+		<load-more :isShow="isShow"></load-more>
+	</view>
+</template>
+
+<script>
+import headerFix from '../../../components/headerFix/headerFix.nvue'
+import courseItem from '../../../components/courseItem/courseItem.nvue'
+import loadMore from '../../../components/loadMore/loadMore.nvue'
+import { GetCourseInfoList, GetChannelInfoList } from '../../../common/getData.js'
+import { imgAddress } from '../../../common/plugin.js'
+
+export default {
+	data () {
+		return {
+			height: '',
+			channelList: [],
+			courseList: [],
+			isShow: '',
+			winH: '',
+			channelId: 0,
+			Page: 1,
+			Rows: '10',
+			noData: false,
+			noDataBg: false,
+			totalCount: 0,
+			inTheEnd: false, // 已到底部
+			channelType: false // 课程类型列表开启状态
+		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.getCourseInfoList()
+		this.GetChannelInfoList()
+	},
+	methods: {
+		listChange () {
+			this.channelType = !this.channelType
+		},
+		changeCourseList (Id) {
+			this.Page = 1
+			this.courseList = []
+			this.channelId = Id
+			this.inTheEnd = false
+			this.noData = false
+			this.noDataBg = false
+			this.channelType = false
+			this.getCourseInfoList()
+		},
+		courseSearch () {
+			uni.navigateTo({
+				url: '/courseCenter/courseSearch/courseSearch'
+			})
+		},
+		async GetChannelInfoList () {
+			let msg = await GetChannelInfoList({})
+			this.channelList = msg.Data.CourseCategoryResult
+		},
+		async getCourseInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			this.noData = false
+			this.noDataBg = false
+			this.isShow = true
+			let msg = await GetCourseInfoList({
+				Page: this.Page,
+				Rows: this.Rows,
+				ChannelId: this.channelId,
+				Sort: 'Sort',
+				Order: 'desc',
+				CourseType: 'All'
+			})
+			this.isShow = false
+			console.log(msg)
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : ''
+				})
+				this.courseList = [...this.courseList, ...msg.Data.List]
+				if (this.courseList.length == this.totalCount) {
+					this.noData = true
+					this.inTheEnd = true
+				}
+				this.Page +=1
+			} else {	
+				console.log(msg)
+			}
+		}
+	},
+	components: {
+		headerFix,
+		courseItem,
+		loadMore
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../../style/mixin.scss';
+.courseCenter{
+	width: 100%;
+	overflow: hidden;
+	background: #fff;
+	.ctcb_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.ctcb_btn_type{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+		.ctcb_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.ctcb_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+	.cc_courselist{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		transform: translateX(-65%);
+		transition: 0.3s;
+	}
+	.cc_courselist_open{
+		transform: translateX(0);
+	}
+	.cc_coverbg{
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.7);
+		position: absolute;
+		bottom: 0;
+		left: 65%;
+		opacity: 0;
+		display: none;
+	}
+	.disNone{
+		display: block;
+		-webkit-animation-name: listIn; /*动画名称*/
+		-webkit-animation-duration: 0.3s; /*动画持续时间*/
+		-webkit-animation-iteration-count: 1; /*动画次数*/
+		-webkit-animation-delay: 0s; /*延迟时间*/
+		-webkit-animation-fill-mode: forwards;
+	}
+	.boxDisappear{
+		display: block;
+		-webkit-animation-name: listOut; /*动画名称*/
+		-webkit-animation-duration: 0.3s; /*动画持续时间*/
+		-webkit-animation-iteration-count: 1; /*动画次数*/
+		-webkit-animation-delay: 0s; /*延迟时间*/
+		-webkit-animation-fill-mode: forwards;
+	}
+	.cc_channnelpart{
+		width:65%;
+		padding-left: 20rpx;
+		background: #fff;
+		.cc_cp_item{
+			width:100%;
+			height: 80rpx;
+			line-height: 80rpx;
+			font-size: 32rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			.cc_cp_itemName{
+				font-size: 32rpx;
+			}
+		}
+	}
+	.cc_svpart{
+		width: 100%;
+		.cc_svpart_inner{
+			padding-top: 15rpx;
+		}
+	}
+	.cc_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+	.cc_noData{
+		height: 50rpx;
+		line-height: 50rpx;
+		text-align: center;
+		background: #fff;
+		font-size: 26rpx;
+	}
+}
+@-webkit-keyframes listIn {
+	0% {
+		opacity: 0;
+	}
+	20%{
+		opacity: .2;
+	}
+	50% {
+		opacity: .5;
+	}
+	70%{
+		opacity: .7;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+@-webkit-keyframes listOut {
+	0% {
+		visibility: visible;
+		height: 100%;
+		opacity: 1;
+	}
+	20% {
+		visibility: visible;
+		height: 100%;
+		opacity: .8;
+	}
+	50%{
+		visibility: visible;
+		height: 100%;
+		opacity: .5;
+	}
+	70%{
+		visibility: visible;
+		height: 100%;
+		opacity: .3;
+	}
+	99% {
+		visibility: visible;
+		height: 100%;
+		opacity: 0;
+	}
+	100%{
+		visibility: hidden;
+		height: 0;
+		opacity: 0;
+	}
+}
+</style>
