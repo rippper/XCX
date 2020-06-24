@@ -1,0 +1,49 @@
+<template>
+	<view class="inputTopic">
+		<textarea class="it_textarea" v-model="detail" placeholder="请输入答案" @input="textareaInput"/>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'inputTopic',
+	data () {
+		return {
+			detail: ''
+		}
+	},
+	props: {
+		Answer: [String, Array],
+		topicIndex: [String, Number]
+	},
+	onShow () {
+		if (this.Answer != 'none') {
+			this.detail = this.Answer
+		}
+	},
+	methods: {
+		textareaInput (e) {
+			console.log(e.detail.value)
+			this.$emit('inputChange', e.detail.value)
+		}
+	},
+	watch: {
+		topicIndex (val) {
+			this.detail = ''
+			if (this.Answer != 'none' && !Array.isArray(this.Answer)) {
+				this.detail = this.Answer
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.inputTopic{
+	.it_textarea{
+		padding: 5rpx 8rpx;
+		margin: 50rpx auto 0;
+		background: #e8e8e8;
+	}
+}
+</style>

@@ -1,0 +1,71 @@
+<template>
+	<view class="examTopicItem">
+		<view class="eti_title">
+			【{{topicItem.ThemeType}}】{{nowTopicNum}}.{{topicItem.ThemeTitle}}({{topicItem.ThemeScore}}分)
+		</view>
+		<view class="eti_answer">
+			<jugement-select :class="{ 'show_disappear': topicItem.ThemeType !== '判断题' }" :ItemInfo="topicItem.ItemInfo" @jugementChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></jugement-select>
+			<single-select :class="{ 'show_disappear': topicItem.ThemeType !== '单选题' }" :ItemInfo="topicItem.ItemInfo" @singleChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></single-select>
+			<more-select :class="{ 'show_disappear': topicItem.ThemeType !== '多选题' }" :ItemInfo="topicItem.ItemInfo" @moreChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></more-select>
+			<input-topic :class="{ 'show_disappear': topicItem.ThemeType !== '简答题' }" @inputChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></input-topic>
+			<Completion :class="{ 'show_disappear': topicItem.ThemeType !== '填空题' }" :spaceNumber="topicItem.ThemeSpace" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></Completion>
+		</view>
+	</view>
+</template>
+
+<script>
+import singleSelect from '../singleSelect/singleSelect.nvue';
+import moreSelect from '../moreSelect/moreSelect.nvue';
+import jugementSelect from '../jugementSelect/jugementSelect.nvue';
+import inputTopic from '../inputTopic/inputTopic.nvue';
+import Completion from '../Completion/Completion.nvue';
+
+export default {
+	name: 'examTopicItem',
+	data () {
+		return {
+			topicHistoryAnswer: ''
+		}
+	},
+	props: {
+		topicItem: Object,
+		nowTopicNum: [String, Number]
+	},
+	methods: {
+		getAnswer (answer) {
+			this.$emit('input', answer)
+		}
+	},
+	components: {
+		singleSelect,
+		moreSelect,
+		jugementSelect,
+		inputTopic,
+		Completion
+	},
+	watch: {
+		topicItem (val) {
+			this.topicHistoryAnswer = val.Answer
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.examTopicItem{
+	width: 100%;
+	height: 100%;
+	.eti_title{
+		display: flex;
+		flex-direction: row;
+		padding: 30rpx 30rpx 0;
+		.eti_title_topictype{
+			display: inline;
+			color: #f00;
+		}
+	}
+	.show_disappear{
+		display: none;
+	}
+}
+</style>

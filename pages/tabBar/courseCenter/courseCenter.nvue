@@ -116,7 +116,7 @@ export default {
 					return
 				}
 				msg.Data.List.forEach(item => {
-					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : ''
+					item.CourseImg ? imgAddress(item.CourseImg) : ''
 				})
 				this.courseList = [...this.courseList, ...msg.Data.List]
 				if (this.courseList.length == this.totalCount) {

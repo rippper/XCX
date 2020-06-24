@@ -114,8 +114,10 @@ function checkStatusToken (response) {
 			uni.navigateTo({
 				url: "/pages/login/login?type=unlogin"
 			})
-		}else {
-			console.log(response)
+		} else if (response.Type === 0) {
+			return response
+		} else {
+			console.log('非记录状态：' + response)
 		}
 	}
 	return {

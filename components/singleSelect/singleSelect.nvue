@@ -1,0 +1,80 @@
+<template>
+	<view class="singleSelect">
+		<radio-group class="radio-group" @change="radioChange">
+			<label class="ssec_item" v-for="(item, index) in ItemInfo" :key="index" :class="{ 'ssec_item_select': selectType == item.ThemeItemFlag }">
+				<radio class="ssec_item_radio" :value="item.ThemeItemFlag" :checked="item.checked"/>
+				<view class="ssec_item_answer">{{ item.ThemeItemFlag }}.{{ item.ThemeItemTitle }}</view>
+			</label>
+		</radio-group>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'singleSelect',
+	data () {
+		return {
+			selectType: ''
+		}
+	},
+	props: {
+		ItemInfo: Array,
+		Answer: [String, Array],
+		topicIndex: [String, Number]
+	},
+	methods: {
+		radioChange (e) {
+			this.selectType = e.detail.value
+			this.$emit('singleChange', e.detail.value)
+		}
+	},
+	watch: {
+		topicIndex (val) {
+			this.selectType = ''
+			
+			if (this.Answer != 'none' && !Array.isArray(this.Answer)) {
+				this.selectType = this.Answer
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.singleSelect{
+	width: 100%;
+	padding: 100rpx 30rpx 0;
+	.radio-group{
+		width: 100%;
+		.ssec_item{
+			width: 100%;
+			max-height: 180rpx;
+			padding-left: 30rpx;
+			margin-bottom: 30rpx;
+			border: 1rpx solid #e8e8e8;
+			border-radius: 15rpx;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: row;
+			position: relative;
+			.ssec_item_radio{
+				width: 0;
+				height: 0;
+				visibility: hidden;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+			.ssec_item_answer{
+				line-height: 90rpx;
+				font-size: 32rpx;
+			}
+		}
+		.ssec_item_select{
+			border: 1rpx solid #f00;
+			color: #f00;
+		}
+	}
+}
+</style>

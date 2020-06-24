@@ -6,7 +6,7 @@
 		<search-history class="search_history" :historyList="courseHistory" :class="{ 'history_disappear': searched }" @makeSelect="selectHistory" @delete="deleteHistory"></search-history>
 		<scroll-view scroll-y class="cs_courseresult" :class="{ 'couresult_disappear': !searched, 'cr_noDataBg': noDataBg }" @scrolltolower="GetCourseInfoList">
 			<courseItem v-for="(item, index) in courseList" :key="index" :courseInfo="item"></courseItem>
-			<u-loadmore :class="{ 'cs_noData': noData }" :status="status"/>
+			<u-loadmore :class="{ 'cs_noData': noDataBg }" :status="status"/>
 		</scroll-view>
 		<u-toast ref="uToast" />
 	</view>
@@ -28,7 +28,6 @@ export default {
 			Page: 1,
 			Rows: 10,
 			totalCount: 0,
-			noData: false,
 			noDataBg: false,
 			searched: false, //课程列表和历史纪录界面切换
 			inTheEnd: false, // 是否到达底部
@@ -64,7 +63,6 @@ export default {
 				this.courseHistory.pop()
 				this.courseHistory.unshift(value)
 				uni.setStorageSync('courseHistory', this.courseHistory)
-				
 			} else {
 				this.courseHistory.unshift(value)
 				uni.setStorageSync('courseHistory', this.courseHistory)
@@ -109,10 +107,8 @@ export default {
 			if (msg.Type === 1) {
 				this.searched = true
 				this.totalCount = msg.Data.TotalCount
-				console.log(msg.Data.List.length)
 				if (msg.Data.List.length == 0 && this.Page == 1) {
 					this.noDataBg = true
-					this.noData = true
 					return
 				}
 				msg.Data.List.forEach(item => {

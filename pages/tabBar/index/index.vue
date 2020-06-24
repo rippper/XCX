@@ -52,10 +52,12 @@
 					<text>排行榜</text>
 				</view>
 				<view>
-					<view class="bp_tl_imgbtn">
-						<image src="../../../static/my_test.png"></image>
-					</view>
-					<text>我的考试</text>
+					<navigator url="/examCenter/examList/examList">
+						<view class="bp_tl_imgbtn">
+							<image src="../../../static/my_test.png"></image>
+						</view>
+						<text>我的考试</text>
+					</navigator>
 				</view>
 			</view>
 			<view class="bp_noticepart">

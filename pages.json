@@ -4,6 +4,19 @@
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+			"path": "pages/examTestPage/examTestPage",
+			"style": {
+				"navigationBarTitleText": "试题列表",
+				"navigationBarBackgroundColor": "#2960b2"
+			}
+		},
+		{
+			"path": "pages/tabBar/index/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/tabBar/courseCenter/courseCenter",
 			"style": {
 				"navigationStyle": "custom"
@@ -20,13 +33,6 @@
 			
 			"path": "pages/login/login",
 			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/tabBar/index/index",
-			"style": {
-				"navigationBarTitleText": "uni-app",
 				"navigationStyle": "custom"
 			}
 		},
@@ -84,6 +90,24 @@
 					"path": "eBookList/eBookList",
 					"style": {
 						"navigationStyle": "custom"
+					}
+				}
+			]
+		},
+		{
+			"root": "examCenter",
+			"pages": [
+				{
+					"path": "examList/examList",
+					"style": {
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "examSearch/examSearch",
+					"style": {
+						"navigationBarTitleText": "考试搜索",
+						"navigationBarBackgroundColor": "#2960b2"
 					}
 				}
 			]

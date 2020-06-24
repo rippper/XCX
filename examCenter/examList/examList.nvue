@@ -1,0 +1,181 @@
+<template>
+	<view class="examList">
+		<header-fix title="考试列表" :height="height">
+			<view class="el_btn">
+				<view class="el_btn_goback" @click="linkBack">
+					<image src="../../static/fanhui.png"></image>
+				</view>
+				<view class="el_btn_centerline"></view>
+				<view class="el_btn_search" @click="examSearch">
+					<image src="../../static/fangdajing.png"></image>
+				</view>
+			</view>
+		</header-fix>
+		<scroll-view class="el_list" scroll-y :class="{ 'el_list_nodatabg': noDataBg }" :style="'padding-top:' + (height + 44) + 'px'" @scrolltolower="GetExamList">
+			<exam-item v-for="(item, index) in examList" :key="index" :itemInfo="item"></exam-item>
+			<u-loadmore :class="{ 'el_noData': noDataBg }" :status="status"/>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+import headerFix from '../../components/headerFix/headerFix.nvue';
+import examItem from '../../components/examItem/examItem.nvue';
+import { GetExamList } from '../../common/getData.js'
+export default {
+	name: 'examList',
+	data () {
+		return {
+			winH: '',
+			height: '',
+			examList: [],
+			Page: 1,
+			Rows: 10,
+			totalCount: 0,
+			noDataBg: true,
+			inTheEnd: false,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onShow () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.GetExamList()
+	},
+	methods: {
+		linkBack () {
+			uni.switchTab({
+				url: '/pages/tabBar/index/index'
+			})
+		},
+		examSearch () {
+			uni.navigateTo({
+				url: '/examCenter/examSearch/examSearch'
+			})
+		},
+		async GetExamList () {
+			if (this.inTheEnd) {
+				return
+			}
+			let msg = await GetExamList({
+				ExamType: 'All',
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.map(item => {
+					if (item.Status == 'UnFinish') {
+						item.passType = '不合格'
+					} else if (item.Status == 'UnJoin') {
+						item.passType = '未考'
+					} else if (item.Status == 'Finish') {
+						item.passType = '合格'
+					}
+				})
+				this.examList = [...this.examList, ...msg.Data.List]
+				if (this.examList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				console.log(this.examList)
+				this.Page += 1
+			} else {
+				console.log(msg)
+			}
+		}
+	},
+	components: {
+		headerFix,
+		examItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examList{
+	width: 100%;
+	height: 100vh;
+	overflow: hidden;
+	background: #fff;
+	.el_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.el_btn_goback{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 13px;
+				height: 13px;
+			}
+		}
+		.el_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.el_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+	.el_list{
+		height: 100%;
+		.cs_noData{
+			display: none;
+		}
+		.u-load-more-wrap{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-around;
+		}
+		.u-load-more-inner{
+			flex-direction: row;
+			align-items: center;
+			height: 80rpx;
+		}
+	}
+	.el_list_nodatabg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

@@ -80,5 +80,25 @@ export default {
 			Page: '',
 			Rows: ''
 		}
+	},
+	
+	/* 考试部分信息 */
+	// 获取考试列表
+	GetExamList: {
+			url: API_URL + weChatPlant + '/GetExamList',
+			data: {
+				ExamType: '', // 考试对于用来说的类型
+				Type: '',
+				Keyword: '',
+				Page: '',
+				Rows: ''
+			}
+	},
+	// 获取考试详情信息
+	GetExam: {
+		url: API_URL + weChatPlant + '/GetExam',
+		data: {
+			Id: ''
+		}
 	}
 }

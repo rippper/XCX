@@ -1,0 +1,28 @@
+<template>
+	<view class="completion">
+		<view v-for="i in spaceNumber" :key="i">
+			
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		name: 'completion',
+		data () {
+			return {
+				
+			}
+		},
+		props: {
+			spaceNumber: Number
+		},
+		methods: {
+			
+		}
+	}
+</script>
+
+<style lang="scss">
+
+</style>

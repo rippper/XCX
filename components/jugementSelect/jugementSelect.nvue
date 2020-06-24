@@ -1,0 +1,83 @@
+<template>
+	<view class="jugementSelect">
+		<radio-group class="radio-group" @change="radioChange">
+			<label class="jsec_item" v-for="(item, index) in ItemInfo" :key="index" :class="{ 'jsec_item_select': selectType == item.ThemeItemFlag }">
+				<radio class="jsec_item_radio" :value="item.ThemeItemFlag" :checked="item.checked"/>
+				<view class="jsec_item_seletword" v-text="item.ThemeItemFlag"></view>
+				<view class="jsec_item_answer" v-text="item.ThemeItemTitle"></view>
+			</label>
+		</radio-group>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'jugementSelect',
+	data () {
+		return {
+			selectType: ''
+		}
+	},
+	props: {
+		ItemInfo: Array,
+		Answer: [String, Array],
+		topicIndex: [String, Number]
+	},
+	methods: {
+		radioChange (e) {
+			this.selectType = e.detail.value
+			this.$emit('jugementChange', e.detail.value)
+		}
+	},
+	watch:{
+		topicIndex (val) {
+			this.selectType = ''
+			if (this.Answer != 'none' && !Array.isArray(this.Answer)) {
+				this.selectType = this.Answer
+			}
+			// if (this.Answer == 'none') {
+				
+			// } else {
+			// 	this.selectType = this.Answer
+			// }
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.jugementSelect{
+	width: 100%;
+	padding: 100rpx 30rpx 0;
+	.radio-group{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		width: 100%;
+	}
+	.jsec_item{
+		width: 40%;
+		height: 270rpx;
+		border: 1rpx solid #e8e8e8;
+		border-radius: 15rpx;
+		background: #f7f7f7;
+		.jsec_item_radio{
+			width: 0;
+			height: 0;
+			visibility: hidden;
+		}
+		.jsec_item_seletword{
+			text-align: center;
+			font-size: 64rpx;
+		}
+		.jsec_item_answer{
+			margin-top: 15rpx;
+			text-align: center;	
+		}
+	}
+	.jsec_item_select{
+		border: 1rpx solid #f00;
+		color: #f00;
+	}
+}
+</style>

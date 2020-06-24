@@ -39,3 +39,15 @@ export const GetUserCourseInfoList = (data) => fetch.postMethods(Api.GetUserCour
 	...Api.GetUserCourseInfoList.data, ...data
 })
 
+/* 考试部分信息 */
+// 获取考试列表
+export const  GetExamList = (data) => fetch.postMethods(Api.GetExamList.url, {
+	...Api.GetExamList.data, ...data 
+})
+// 获取考试详情信息
+export const GetExam = (data) => fetch.postMethods(Api.GetExam.url, {
+	...Api.GetExam.data, ...data
+})
+
+
+

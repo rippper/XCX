@@ -25,7 +25,7 @@
 				<view class="mp4_vc_vi_moreInfo">
 					<view class="mvvm_left">
 						<view class="mvvm_left_courseType">
-							<text>课程分类：</text>
+							<text>课程分类:</text>
 							<text class="courseTypeContent" v-text="courseType"></text>
 						</view>
 						<view class="mvvm_left_time">
@@ -248,7 +248,6 @@ export default {
 						line-height: 50rpx;
 						display: flex;
 						flex-direction: row;
-						align-items: center;
 						font-size: 32rpx;
 						@include ellipsis_two(1);
 					}

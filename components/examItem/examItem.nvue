@@ -1,0 +1,94 @@
+<template>
+	<view class="examItem" @click="linkToExamPage">
+		<view class="ei_itemleft">
+			<image src="../../static/exam_ico.png"></image>
+		</view>
+		<view class="ei_itemright">
+			<text class="ei_itemright_title" v-text="itemInfo.ExamTitle"></text>
+			<text class="ei_itemright_time">考试截止时间: {{itemInfo.EndTime}}</text>
+			<view class="ei_ir_infofirst">
+				<text class="ei_ir_if_left">题数: {{itemInfo.ThemeCount}}题</text>
+				<text class="ei_ir_if_right">{{ itemInfo.ExamCredit }}学时</text>
+			</view>
+			<view class="ei_ri_infosecound">
+				<text class="ei_ri_is_left">考试时间: {{ itemInfo.TimeLimit }}分钟</text>
+				<text class="ei_ri_is_right" v-text="itemInfo.passType"></text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'examItem',
+	props: {
+		itemInfo: Object
+	},
+	methods: {
+		linkToExamPage () {
+			uni.navigateTo({
+				url: '/pages/examTestPage/examTestPage?Id=' + this.itemInfo.ExamId
+			})
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examItem{
+	display: flex;
+	flex-direction: row;
+	padding: 20rpx 30rpx;
+	background: #fff;
+	.ei_itemleft{
+		width: 90rpx;
+		image{
+			width: 56rpx;
+			height:56rpx;
+		}
+	}
+	.ei_itemright{
+		width: 600rpx;
+		.ei_itemright_title{
+			max-height: 80rpx;
+			line-height: 40rpx;
+			font-size: 32rpx;
+			@include ellipsis_two();
+		}
+		.ei_itemright_time{
+			height: 60rpx;
+			line-height: 60rpx;
+			font-size: 26rpx;
+			color: #666;
+		}
+		.ei_ir_infofirst{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			font-size: 26rpx;
+			color: #666;
+			.ei_ir_if_left{
+				
+			}
+			.ei_ir_if_right{
+				
+			}
+		}
+		.ei_ri_infosecound{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			margin-top: 8rpx;
+			font-size: 26rpx;
+			color: #666;
+			.ei_ri_is_left{
+				
+			}
+			.ei_ri_is_right{
+				
+			}
+		}
+	}
+}
+</style>
