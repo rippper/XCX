@@ -1,0 +1,73 @@
+<template>
+	<view class="articleItem" @click="linkToDetail">
+		<view class="ai_left">
+			<image :src="articleInfo.ArticleImg" v-if="imgType" @error="changeImgType"></image>
+			<image src="../../static/error-img.png" v-else></image>
+		</view>
+		<view class="ai_right">
+			<text class="ai_right_title" v-text="articleInfo.ArticleTitle"></text>
+			<text class="ai_right_date" v-text="articleInfo == null ? '' : articleInfo.ArticleCreateDate.substr(0, 10)"></text>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	Name: 'articleItem',
+	data () {
+		return {
+			imgType: true
+		}
+	},
+	props: {
+		articleInfo: Object
+	},
+	methods: {
+		linkToDetail () {
+			uni.navigateTo({
+				url: '/articleCenter/articleDetail/articleDetail?id=' + this.articleInfo.ArticleId
+			})
+		},
+		changeImgType () {
+			this.imgType = false
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.articleItem{
+	padding: 30rpx;
+	background: #fff;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	.ai_left{
+		image{
+			width: 204rpx;
+			height: 150rpx;
+		}
+	}
+	.ai_right{
+		width: 486rpx;
+		padding-left: 20rpx;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		.ai_right_title{
+			width: 100%;
+			max-height: 80rpx;
+			font-size: 30rpx;
+			overflow: hidden;
+			@include ellipsis_two();
+		}
+		.ai_right_date{
+			margin-bottom: 15rpx;
+			font-size: 26rpx;
+			color: #cecece;
+		}
+	}
+}
+</style>

@@ -1,0 +1,34 @@
+<template>
+	<view class="eBookSectionItem" v-text="sectionInfo.Title" @click="linkToContent"></view>
+</template>
+
+<script>
+export default {
+	name: 'eBookSectionItem',
+	props: {
+		sectionInfo: Object,
+		bookId: [String, Number]
+	},
+	methods: {
+		linkToContent () {
+			// console.log(this.bookId)
+			uni.navigateTo({
+				url: '/eBookCenter/eBookContent/eBookContent?Id=' + this.sectionInfo.BookTitelId + '&Section=' + this.sectionInfo.Title + '&BookId=' + this.bookId
+			})
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookSectionItem{
+	width: 100%;
+	height: 80rpx;
+	padding: 0 30rpx;
+	line-height: 80rpx;
+	background: #fff;
+	font-size: 30rpx;
+	@include ellipsis_two(1);
+}
+</style>

@@ -1,10 +1,10 @@
 <template>
 	<view class="cellBtn">
 		<view class="ci_linkpart" @click="clickToLink">
-			<view class="cellBtn_icon">
-				<slot name="iconpart"></slot>
+			<view class="cellBtn_icon" v-if="$slots.default">
+				<slot></slot>
 			</view>
-			<view class="cellBtn_title" v-text="title"></view>
+			<view class="cellBtn_title" :class="{ 'cellBtn_title_lastwidth': !$slots.default }" v-text="title"></view>
 			<view class="cellBtn_arrows">
 				<u-icon name="arrow-right" color="#606266" size="32"></u-icon>
 			</view>
@@ -49,6 +49,10 @@
 		}
 		.cellBtn_title{
 			width: 540rpx;
+		}
+		.cellBtn_title_lastwidth{
+			width: 640rpx;
+			padding-left: 20rpx;
 		}
 	}
 }

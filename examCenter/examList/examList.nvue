@@ -12,9 +12,10 @@
 			</view>
 		</header-fix>
 		<scroll-view class="el_list" scroll-y :class="{ 'el_list_nodatabg': noDataBg }" :style="'padding-top:' + (height + 44) + 'px'" @scrolltolower="GetExamList">
-			<exam-item v-for="(item, index) in examList" :key="index" :itemInfo="item"></exam-item>
+			<exam-item v-for="(item, index) in examList" :key="index" :itemInfo="item" @getExamId="changeContent"></exam-item>
 			<u-loadmore :class="{ 'el_noData': noDataBg }" :status="status"/>
 		</scroll-view>
+		<u-modal v-model="show" :content="content" @confirm="linkToExamPage" show-cancel-button="true"></u-modal>
 	</view>
 </template>
 
@@ -38,8 +39,16 @@ export default {
 			loadText: {
 				loading: '加载中',
 				nomore: '没有更多的内容了'
-			}
+			},
+			backWay: '',
+			show: false,
+			content: '',
+			currentObj: '',
+			trainType: 'exam'
 		}
+	},
+	onLoad (option) {
+		this.checkBackWay(option)
 	},
 	onShow () {
 		wx.getSystemInfo({
@@ -52,14 +61,47 @@ export default {
 	},
 	methods: {
 		linkBack () {
-			uni.switchTab({
-				url: '/pages/tabBar/index/index'
-			})
+			if (this.backWay == 'pc') {
+				uni.removeStorageSync('ELBack')
+				uni.switchTab({
+					url: '/pages/tabBar/personalCenter/personalCenter'
+				})
+			} else if (this.backWay == 'Index') {
+				uni.removeStorageSync('ELBack')
+				uni.switchTab({
+					url: '/pages/tabBar/index/index'
+				})
+			}
+			
 		},
 		examSearch () {
 			uni.navigateTo({
 				url: '/examCenter/examSearch/examSearch'
 			})
+		},
+		checkBackWay (option) {
+			if (option.backway) {
+				uni.setStorageSync('ELBack', option.backway)
+				this.backWay = option.backway
+			} else {
+				uni.getStorageSync('ELBack') ? this.backWay = uni.getStorageSync('ELBack') : this.backWay = 'Index'
+			}
+		},
+		changeContent (title, obj) {
+			this.content = '您是否确定参加' + title + '？'
+			this.show = true
+			this.currentObj = obj
+		},
+		linkToExamPage (item) {
+			if (this.trainType == 'train') {
+				uni.navigateTo({
+					url: '/examCenter/examTestPage/examTestPage?Id=' + this.currentObj.ExamId + '&fromType=train'
+				})
+			} else {
+				uni.navigateTo({
+					url: '/examCenter/examTestPage/examTestPage?Id=' + this.currentObj.ExamId + '&fromType=exam'
+				})
+			}
 		},
 		async GetExamList () {
 			if (this.inTheEnd) {
@@ -84,6 +126,7 @@ export default {
 					} else if (item.Status == 'Finish') {
 						item.passType = '合格'
 					}
+					item.EndTime = item.EndTime.substr(0, 10)
 				})
 				this.examList = [...this.examList, ...msg.Data.List]
 				if (this.examList.length == this.totalCount) {
@@ -172,10 +215,16 @@ export default {
 			height: 80rpx;
 		}
 	}
+	.el_noData{
+		display: none;
+	}
 	.el_list_nodatabg{
 		@include setBackground('no_data.png');
 		background-size: 254rpx 402rpx;
 		background-position: center center;
+	}
+	.u-model-footer{
+		flex-direction: row;
 	}
 }
 </style>

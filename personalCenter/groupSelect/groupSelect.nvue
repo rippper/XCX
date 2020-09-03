@@ -1,0 +1,158 @@
+<template>
+	<view class="groupSelect">
+		<view class="gs_top">
+			<view class="gs_toppart" :style="'height:' + height + 'px'"></view>
+			<view class="gs_title">
+				<view class="gs_title_item">
+					<view class="gs_title_iteminner" @click="goBack">
+						<image src="../../static/fanhui.png"></image>
+					</view>
+				</view>
+				<view class="gs_title_item" v-text="currentTitle"></view>
+				<view class="gs_title_item"></view>
+			</view>
+		</view>
+		<view class="gs_listContent" :style="'padding-top:' + (height + 44) +'px'">
+			<view class="gs_listContent_item" v-for="(item, index) in currentGroupList" :key="index" @click="typeListSearch(item.UserGroupId, item.UserGroupName)">
+				<view v-text="item.UserGroupName"></view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import { GetGroupList } from '../../common/getData.js';
+export default {
+	name: 'groupSelect',
+	data () {
+		return {
+			winH: '',
+			height: '',
+			currentTitle: '选择部门',
+			currentId: '0',
+			groupRank: 0,
+			currentGroupList: [],
+			selectList: [
+				{
+					Id: 0,
+					Name: '选择部门'
+				}
+			]
+		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.GetGroupList()
+	},
+	methods: {
+		typeListSearch (index, name) {
+			if (index == this.currentId) {
+				uni.setStorageSync('groupObj', JSON.stringify(this.selectList[this.groupRank]))
+				uni.navigateBack()
+			} else {
+				let obj = {
+					Id: index,
+					Name: name
+				}
+				this.selectList.push(obj)
+				this.groupRank += 1
+				this.currentId = index
+				this.currentTitle = name
+				this.GetGroupList()
+			}
+		},
+		goBack () {
+			if (this.groupRank > 0) {
+				this.selectList.pop()
+				this.groupRank -= 1
+				this.currentId = this.selectList[this.groupRank].Id
+				this.currentTitle = this.selectList[this.groupRank].Name
+				this.GetGroupList()
+			} else {
+				uni.navigateBack()
+			}
+		},
+		async GetGroupList () {
+			let msg = await GetGroupList({
+				ParentId: this.currentId
+			})
+			if (msg.Type === 1) {
+				// console.log(msg)
+				if (this.currentId != 0) {
+					msg.Data.GroupInfoList.unshift({
+						UserGroupId: this.selectList[this.groupRank].Id,
+						UserGroupName: '当前部门'
+					})
+				}
+				this.currentGroupList = msg.Data.GroupInfoList
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.groupSelect{
+	width: 100%;
+	height: 100vh;
+	.gs_top{
+		width: 100%;
+		background: $brand-primary;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	.gs_toppart{
+		width: 100%;
+	}
+	.gs_title{
+		width: 100%;
+		height: 44px;
+		line-height: 44px;
+		color: #fff;
+		display: flex;
+		flex-direction: row;
+		.gs_title_item{
+			flex: 1;
+			font-size: 32rpx;
+			text-align: center;
+			@include ellipsis_two(1);
+			.gs_title_iteminner{
+				width: 44px;
+				height: 44px;
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: center;
+				image{
+					width: 36rpx;
+					height: 36rpx;
+				}
+			}
+		}
+	}
+	.gs_listContent{
+		width: 100%;
+		height: 100%;
+	}
+	.gs_listContent_item{
+		width: 100%;
+		height: 100rpx;
+		line-height: 100rpx;
+		padding: 0 30rpx;
+		border-bottom: 1rpx solid #e8e8e8;
+		background: #fff;
+		.gs_listContent_item{
+			width: 690rpx;
+			height: 100%;
+		}
+	}
+}
+</style>

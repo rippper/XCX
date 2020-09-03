@@ -1,26 +1,36 @@
 <template>
 	<view class="mycourse" :style="'margin-top:' + (height + 44) + 'px'" ref="courseCenter">
-		<view class="mc_title">
-			<view class="mc_title_status" :style="'height:' + height + 'px'"></view>
-			<view class="mc_title_content">
-				<view class="mc_title_content_btnpart">
-					<view class="mtcb_btn" @click="goBack"></view>
+		<header-fix title="我的课程" :height="height">
+			<view class="mc_btn">
+				<view class="mc_btn_goback" @click="goBack">
+					<image src="../../static/fanhui.png"></image>
 				</view>
-				<view class="mc_title_content_title">我的课程</view>
-				<view class="mc_title_content_rightpart"></view>
+				<view class="mc_btn_centerline"></view>
+				<view class="mc_btn_search" @click="courseSearch">
+					<image src="../../static/fangdajing.png"></image>
+				</view>
 			</view>
-		</view>
+		</header-fix>
 		<view class="mc_content">
 			<view class="mc_content_utabs" :style="'top:' + (height + 44) + 'px'">
 				<u-tabs-swiper ref="uTabs" :list="list" :is-scroll="false" :current="current" @change="tabsChange"></u-tabs-swiper>
 			</view>
 			<swiper :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish" :style="'height:' + (winH - height - 44) + 'px'">
 				<swiper-item class="swiper-item">
-					<!-- <view class="swiper-item-one"></view> -->
-					<scroll-view scroll-y class="swiper-item-one" @scrolltolower="getUnFinishCourse"></scroll-view>
+					<scroll-view scroll-y class="swiper-item-inner" @scrolltolower="getUnFinishCourse" :class="{ 'mc_nodatabg': unNoDataBg }">
+						<view class="mc_content_swiperinner">
+							<train-course-item v-for="item in unFinishList" :key="item.CourseId" :courseInfo="item"></train-course-item>
+							<u-loadmore :class="{ 'mc_noData': unNoDataBg }" :status="unStatus"/>
+						</view>
+					</scroll-view>
 				</swiper-item>
 				<swiper-item class="swiper-item">
-					<scroll-view scroll-y class="swiper-item-two" @scrolltolower="getUnFinishCourse"></scroll-view>
+					<scroll-view scroll-y class="swiper-item-inner" @scrolltolower="getFinishCourse" :class="{ 'mc_nodatabg': noDataBg }">
+						<view class="mc_content_swiperinner">
+							<train-course-item v-for="item in finishList" :key="item.CourseId" :courseInfo="item"></train-course-item>
+							<u-loadmore :class="{ 'mc_noData': noDataBg }" :status="status"/>
+						</view>
+					</scroll-view>
 				</swiper-item>
 			</swiper>
 		</view>
@@ -29,6 +39,9 @@
 
 <script>
 import { GetUserCourseInfoList } from '../../common/getData.js';
+import { imgAddress } from '../../common/plugin.js';
+import trainCourseItem from '../../components/trainCourseItem/trainCourseItem.nvue';
+import headerFix from '../../components/headerFix/headerFix.nvue';
 export default {
 	name: 'myCourse',
 	data () {
@@ -36,15 +49,29 @@ export default {
 			height: '',
 			winH: '',
 			list: [{
-				name: '已完成'
-			}, {
 				name: '未完成'
+			}, {
+				name: '已完成'
 			}],
 			current: 0,
 			swiperCurrent: 0,
+			unFinishList: [],
+			finishList: [],
 			unFinishPage: 1,
+			unFinishTotal: 0,
+			unNoDataBg: true,
+			unInTheEnd: false,
 			finishPage: 1,
-			Rows: 10
+			finishTotal: 0,
+			noDataBg: true,
+			inTheEnd: false,
+			Rows: 10,
+			unStatus: 'loading',
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
 		}
 	},
 	onLoad () {
@@ -54,13 +81,13 @@ export default {
 				this.height = res.statusBarHeight
 			}
 		})
-		this.getUnFinishCourse()
+	},
+	onShow () {
+		this.render()
 	},
 	methods: {
 		goBack () {
-			uni.navigateBack({
-				url: 'pages/tabBar/personalCenter/personalCenter'
-			})
+			uni.navigateBack()
 		},
 		tabsChange(index) {
 			this.swiperCurrent = index;
@@ -75,67 +102,169 @@ export default {
 			this.swiperCurrent = current;
 			this.current = current;
 		},
+		courseSearch () {
+			uni.navigateTo({
+				url: '/personalCenter/myCourseSearch/myCourseSearch'
+			})
+		},
+		async render () {
+			let unFinish = await GetUserCourseInfoList({
+				Finish: 0,
+				Page: this.unFinishPage,
+				Rows: this.Rows
+			})
+			if (unFinish.Type === 1) {
+				this.unFinishTotal = unFinish.Data.TotalCount
+				if (this.unFinishTotal != 0){
+					this.unNoDataBg = false
+					unFinish.Data.List.forEach(item => {
+						item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : require('../../static/noCourse.png')
+					})
+					this.unFinishList = [...this.unFinishList, ...unFinish.Data.List]
+					if (this.unFinishList.length == this.unFinishTotal) {
+						this.unStatus = 'nomore',
+						this.unInTheEnd = true
+					}
+					this.unFinishPage += 1
+				}
+				
+			} else if (unFinish.status == 404) {
+				return false
+			}
+			let Finish = await GetUserCourseInfoList({
+				Finish: 1,
+				Page: this.finishPage,
+				Rows: this.Rows
+			})
+			
+			if (Finish.Type === 1) {
+				this.finishTotal = Finish.Data.TotalCount
+				if (this.finishTotal == 0 && this.finishPage == 1) {
+					return false
+				}
+				this.noDataBg = false
+				Finish.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : require('../../static/noCourse.png')
+				})
+				this.finishList = [...this.finishList, ...Finish.Data.List]
+				if (this.finishList.length == this.finishTotal) {
+					this.status = 'nomore',
+					this.inTheEnd = true
+				}
+				this.finishPage += 1
+			}
+		},
 		async getUnFinishCourse () {
+			if (this.unInTheEnd) {
+				return false
+			}
 			let msg = await GetUserCourseInfoList({
 				Finish: 0,
 				Page: this.unFinishPage,
 				Rows: this.Rows
 			})
-			console.log(msg)
+			if (msg.Type === 1) {
+				// console.log(msg)
+				this.unFinishTotal = msg.Data.TotalCount
+				if (this.unFinishTotal == 0 && this.unFinishPage == 1){
+					return false
+				}
+				this.unNoDataBg = false
+				msg.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : require('../../static/noCourse.png')
+				})
+				this.unFinishList = [...this.unFinishList, ...msg.Data.List]
+				if (this.unFinishList.length == this.unFinishTotal) {
+					this.unStatus = 'nomore',
+					this.unInTheEnd = true
+				}
+				this.unFinishPage += 1
+			} else if (msg.status == 404) {
+				return 404
+			}
+		},
+		async getFinishCourse () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetUserCourseInfoList({
+				Finish: 1,
+				Page: this.finishPage,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.finishTotal = msg.Data.TotalCount
+				if (this.finishTotal == 0 && this.finishPage == 1) {
+					return false
+				}
+				this.noDataBg = false
+				msg.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : require('../../static/noCourse.png')
+				})
+				this.finishList = [...this.finishList, ...msg.Data.List]
+				if (this.finishList.length == this.finishTotal) {
+					this.status = 'nomore',
+					this.inTheEnd = true
+				}
+				this.finishPage += 1
+			} else {
+				// console.log(msg)
+				return false
+			}
 		}
+	},
+	components: {
+		headerFix,
+		trainCourseItem
 	}
 }
 </script>
 
 <style lang="scss">
+@import '../../style/mixin.scss';
 .mycourse{
-	.mc_title{
-		width: 100%;
-		position: fixed;
+	.mc_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
 		top: 0;
+		right: 0;
+		bottom: 0;
 		left: 0;
-		z-index: 100;
-		.mc_title_status{
-			background: #2960b2;
-		}
-		.mc_title_content{
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.mc_btn_goback{
+			width: 40px;
+			height: 30px;
 			display: flex;
-			flex-direction: row;
-			height: 44px;
-			line-height: 44px;
-			background: #2960b2;
-			.mc_title_content_btnpart{
-				flex: 1;
-				position: relative;
-				.mtcb_btn{
-					width: 81px;
-					height: 30px;
-					margin: auto;
-					border: 1rpx solid #999;
-					border-radius: 58rpx;
-					background: rgba(0,0,0,0.2);
-					position: absolute;
-					top: 0;
-					right: 0;
-					bottom: 0;
-					left: 0;
-					overflow: hidden;
-					display: flex;
-					flex-direction: row;
-					justify-content: space-between;
-					align-items: center;
-				}
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 13px;
+				height: 13px;
 			}
-			.mc_title_content_title{
-				flex: 1;
-				line-height: 40px;
-				text-align: center;
-				font-size: 32rpx;
-				font-weight: bold;
-				color: #fff;
-			}
-			.mc_title_content_rightpart{
-				flex: 1;
+		}
+		.mc_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.mc_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
 			}
 		}
 	}
@@ -150,21 +279,47 @@ export default {
 		.u-tabs-scorll-flex{
 			flex-direction: row;
 		}
+		u-line-progress{
+			display: flex;
+			justify-content: center;
+		}
+		.u-progress{
+			width: 100%;
+			flex-direction: row;
+		}
+		.u-load-more-wrap{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-around;
+			background-color: transparent!important;
+		}
+		.u-more-text{
+			background-color: #e8e8e8!important;
+		}
+		.u-load-more-inner{
+			flex-direction: row;
+			align-items: center;
+			height: 80rpx;
+		}
 		.swiper-item{
 			width: 100%;
 			padding-top: 80rpx;
-			background-color: #ff0;
-			.swiper-item-one{
+			.swiper-item-inner{
 				width: 100%;
 				height: 100%;
-				background: #000;
-			}
-			.swiper-item-two{
-				width: 100%;
-				height: 100%;
-				background: #0f0;
+				.mc_content_swiperinner{
+					padding-top: 30rpx;
+				}
 			}
 		}
+	}
+	.mc_noData{
+		display: none;
+	}
+	.mc_nodatabg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
 	}
 }
 </style>

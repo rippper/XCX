@@ -1,0 +1,485 @@
+<template>
+	<view class="examTestPage">
+		<view class="etp_time">
+			<view class="etp_time_timeRecord" v-if="timeLimit">
+				<text>剩余时间: </text><text v-text="minute"></text><text>:</text><text v-text="second"></text>
+			</view>
+			<view v-else>
+				<text>剩余时间: 不限时</text>
+			</view>
+		</view>
+		<view class="etp_tipicpart">
+			<scroll-view scroll-y class="etp_topiclist" :class="{ 'etp_topiclist_onShow': nowTopicNum%2 == 0 }">
+				<exam-topic-item :topicItem="nowTopicNum%2 == 0 ? nowObj : preObj" :nowTopicNum="nowTopicNum" v-model="currentAnswer"></exam-topic-item>
+			</scroll-view>
+			<scroll-view scroll-y class="etp_topiclist" :class="{ 'etp_topiclist_onShow': nowTopicNum%2 == 1 }">
+				<exam-topic-item :topicItem="nowTopicNum%2 == 1 ? nowObj : preObj" :nowTopicNum="nowTopicNum" v-model="currentAnswer"></exam-topic-item>
+			</scroll-view>
+		</view>
+		<u-toast ref="uToast" />
+		<view class="etp_topiccontrol">
+			<view class="etp_tc_left">
+				<view class="etp_tc_btn" v-if="nowTopicNum > 1" @click="storageAnswerPre">
+					上一题
+				</view>
+			</view>
+			<view class="etp_tc_middle">
+				<text class="etp_tc_middle_nownum" v-text="nowTopicNum"></text> / <text class="etp_tc_middle_allnum" v-text="topicAllNum"></text>
+			</view>
+			<view class="etp_tc_right">
+				<view class="etp_tc_btn" v-if="nowTopicNum < topicAllNum" @click="storageAnswerNext">
+					下一题
+				</view>
+				<view class="etp_tc_btn" v-else-if="nowTopicNum == topicAllNum" @click="submitAnswer('normal')">
+					提交
+				</view>
+			</view>
+		</view>
+		<u-modal v-model="show" :content="content" @confirm="goBack" :show-cancel-button="false"></u-modal>
+	</view>
+</template>
+
+<script>
+import { GetExam, UpdateUserExam } from '../../common/getData.js'
+import examTopicItem from '../../components/examTopicItem/examTopicItem.nvue'
+export default {
+	name: 'examTestPage',
+	data () {
+		return {
+			examId: '',
+			Ticket: '', // 考试ticket值
+			topicList: '',  // 考题列表
+			topicAllNum: 1, // 所有题目总数 
+			nowTopicNum: 0, // 当前所答题目序数
+			nowObj: {
+				ThemeType: '',
+				ThemeTitle: '',
+				ThemeScore: 0
+			},
+			preObj: {
+				ThemeType: '',
+				ThemeTitle: '',
+				ThemeScore: 0
+			},
+			minute: '00',
+			second: '00',
+			timeInfo: '', // 考试限制具体时间
+			timeLimit: false,
+			TriesLimit: '',
+			TimeRobot: '',
+			show: false, // 不可考弹框状态
+			content: ''	, // 不可考弹框提示内容
+			currentAnswer: '', // 当前答案
+			couldSeeResult: false , // 是否考完可以查看答案
+			finishTime: '', // 判断考试类型，如果大于0类型为计时类型，等于0不计时，等于-1考试获取失败存在不可考因素
+			isUpTest: false,
+			fromType: ''
+		}
+	},
+	onLoad (option) {
+		this.examId = option.Id
+		this.fromType = option.fromType
+		this.jugementExamType()
+	},
+	onUnload () {
+		clearInterval(this.TimeRobot)
+		if (!this.isUpTest) {
+			this.answerStorage()
+		} else {
+			uni.removeStorageSync('testBreak' + this.examId)
+		}
+	},
+	onHide () {
+		if (!this.isUpTest) {
+			this.answerStorage()
+		} else {
+			uni.removeStorageSync('testBreak' + this.examId)
+		}
+	},
+	methods: {
+		goBack () {
+			uni.navigateBack()
+		},
+		makeTimeRobot () {
+			this.TimeRobot = setInterval(() => {
+				this.timeCul()
+			}, 1000)
+		},
+		timeCul () {
+			this.second -= 1
+			if (this.second == -1 && this.minute != '00') {
+				this.minute = this.minute - 1
+				this.second = '59'
+			} else if (this.second == 0 && this.minute == 0){
+				this.second = '00'
+				clearInterval(this.TimeRobot)
+				this.submitAnswer('Time')
+				return false
+			}
+			if (this.minute.toString().length < 2) {
+				this.minute = '0' + this.minute
+			} else if (this.second < 10) {
+				this.second = '0' + this.second
+			}
+		},
+		storageAnswerPre () {
+			if (this.currentAnswer) {
+				this.$set(this.topicList[this.nowTopicNum - 1], 'Answer', this.currentAnswer)
+				this.currentAnswer = ''
+				this.nowObj = this.topicList[this.nowTopicNum - 2]
+				this.preObj = this.topicList[this.nowTopicNum - 1]
+				this.nowTopicNum -= 1
+			} else if (this.topicList[this.nowTopicNum - 1].Answer == 'none' && !this.currentAnswer) {
+				this.$refs.uToast.show({
+					title: '请先填写当前题目答案',
+					type: 'warning',
+					position: 'bottom',
+					icon: false
+				})
+			} else if (this.topicList[this.nowTopicNum - 1].Answer != 'none' && !this.currentAnswer) {
+				this.nowObj = this.topicList[this.nowTopicNum - 2]
+				this.preObj = this.topicList[this.nowTopicNum - 1]
+				this.nowTopicNum -= 1
+			}
+		},
+		storageAnswerNext () {
+			if (this.currentAnswer) {
+				this.$set(this.topicList[this.nowTopicNum - 1], 'Answer', this.currentAnswer)
+				this.currentAnswer = ''
+				this.preObj = this.topicList[this.nowTopicNum - 1]
+				this.nowObj = this.topicList[this.nowTopicNum]
+				this.nowTopicNum += 1
+			} else if (this.topicList[this.nowTopicNum - 1].Answer == 'none' && !this.currentAnswer) {
+				this.$refs.uToast.show({
+					title: '请先填写当前题目答案',
+					type: 'warning',
+					position: 'bottom',
+					icon: false
+				})
+			} else if (this.topicList[this.nowTopicNum - 1].Answer != 'none' && !this.currentAnswer) {
+				this.preObj = this.topicList[this.nowTopicNum - 1]
+				this.nowObj = this.topicList[this.nowTopicNum]
+				this.nowTopicNum += 1
+			}
+		},
+		answerStorage () {
+			if (this.finishTime == -1) {
+				return false
+			}
+			if (this.currentAnswer != '') {
+				this.$set(this.topicList[this.nowTopicNum - 1], 'Answer', this.currentAnswer)
+			}
+			console.log(this.finishTime)
+			const Obj = {
+				Ticket: this.Ticket,
+				TriesLimit: this.TriesLimit,
+				CurrentIndex: this.nowTopicNum,
+				TopicList: this.topicList,
+				TimeLimit: this.timeLimit,
+				CouldSeeResult: this.couldSeeResult,
+				FinishTime: this.finishTime,
+				TimeInfo: this.timeInfo
+			}
+			uni.setStorageSync('testBreak' + this.examId, JSON.stringify(Obj))
+		},
+		jugementExamType () {
+			let Obj = uni.getStorageSync('testBreak' + this.examId)
+			if (Obj) {
+				let newObj = JSON.parse(Obj)
+				if (newObj.FinishTime == 0) {
+					this.Ticket = newObj.Ticket,
+					this.topicList = newObj.TopicList
+					this.timeInfo = newObj.TimeInfo
+					this.topicAllNum = newObj.TopicList.length
+					this.nowTopicNum = newObj.CurrentIndex
+					this.timeLimit = false
+					this.TriesLimit = newObj.TriesLimit
+					this.couldSeeResult = newObj.CouldSeeResult
+					this.finishTime = newObj.FinishTime
+					this.nowObj = this.topicList[this.nowTopicNum - 1]
+					this.preObj = this.topicList[this.nowTopicNum - 1]
+					this.makeTimeRobot()
+				} else if (newObj.FinishTime > 0) {
+					let Time = new Date().getTime()
+					let continueTime = newObj.FinishTime - Time
+					if (continueTime < 0) {
+						uni.removeStorageSync('testBreak' + this.examId)
+						this.GetExam()
+					} else {
+						this.Ticket = newObj.Ticket,
+						this.topicList = newObj.TopicList
+						this.timeInfo = newObj.TimeInfo
+						this.topicAllNum = newObj.TopicList.length
+						this.nowTopicNum = newObj.CurrentIndex
+						this.minute = Math.floor(continueTime / 60000) > 10 ? Math.floor(continueTime / 60000) : '0' + Math.floor(continueTime / 60000)
+						this.second = Math.floor((continueTime / 1000)% 60) > 10 ? Math.floor((continueTime / 1000)% 60) : '0' + Math.floor((continueTime / 1000)% 60)
+						this.timeLimit = true
+						this.TriesLimit = newObj.TriesLimit
+						this.couldSeeResult = newObj.CouldSeeResult
+						this.finishTime = newObj.FinishTime
+						this.nowObj = this.topicList[this.nowTopicNum - 1]
+						this.preObj = this.topicList[this.nowTopicNum - 1]
+						this.makeTimeRobot()
+					}
+				}
+			} else {
+				this.GetExam()
+			}
+		},
+		async GetExam () {
+			let msg = await GetExam({
+				Id: this.examId
+			})
+			if (msg.Type == 1) {
+				this.Ticket = msg.Data.Ticket
+				if (msg.Data.TriesLimit == 0) { // 检测是否有考试次数限制
+					this.TriesLimit = msg.Data.TriesLimit
+				} else {
+					this.TriesLimit = msg.Data.TriesLimit - msg.Data.LattemptNumber
+				}
+				this.couldSeeResult = msg.Data.SeeResultFlag
+				console.log(this.couldSeeResult)
+				if (msg.Data.TimeLimit == 0) { // 检测是否限时
+					this.timeLimit = false
+					this.finishTime = 0
+				} else {
+					this.timeLimit = true
+					this.timeInfo = msg.Data.TimeLimit
+					this.finishTime = new Date().getTime() + this.timeInfo * 60 *1000
+					this.minute = msg.Data.TimeLimit < 10 ? '0' + msg.Data.TimeLimit : msg.Data.TimeLimit
+					this.makeTimeRobot()
+				}
+				msg.Data.ThemeInfoList.forEach((item, index) => {
+					if (item.ThemeType === 0) {
+						item.ThemeType = '判断题'
+					} else if (item.ThemeType === 1) {
+						item.ThemeType = '单选题'
+					} else if (item.ThemeType === 2) {
+						item.ThemeType = '多选题'
+					} else if (item.ThemeType === 3) {
+						item.ThemeType = '简答题'
+					} else if (item.ThemeType === 4) {
+						item.ThemeType = '填空题'
+						item.ThemeSpace = 0
+						let arr = item.ThemeTitle.split("")
+						arr.forEach((itemson,indexson) => {
+							if (itemson == '@') {
+								item.ThemeSpace += 1
+								arr.splice(indexson, 1, '_____')
+							}
+						})
+						item.ThemeTitle = arr.join('')
+					}
+					item.Answer = 'none'
+				})
+				this.topicAllNum = msg.Data.ThemeInfoList.length
+				this.nowTopicNum = 1
+				this.topicList = msg.Data.ThemeInfoList
+				this.nowObj = this.topicList[0]
+				this.preObj = this.topicList[0]
+			} else if (msg.Type === 0) {
+				this.content = msg.Message
+				this.show = true
+				this.finishTime = -1
+			}
+		},
+		async submitAnswer (Type) { // Type提交类型 normal: 正常类型; Time: 超时类型
+			if (this.currentAnswer) {
+				this.$set(this.topicList[this.nowTopicNum - 1], 'Answer', this.currentAnswer)
+			} else if (this.topicList[this.nowTopicNum - 1].Answer == 'none' && !this.currentAnswer && Type == 'normal') {
+				this.$refs.uToast.show({
+					title: '请先填写当前题目答案',
+					type: 'warning',
+					position: 'bottom',
+					icon: false
+				})
+				return
+			}
+			let arr = []
+			this.topicList.forEach((item, index) => {
+				if (item.ThemeType === '判断题') {
+					let obj1 = {}
+					obj1.QuestionId = item.ThemeId
+					if (item.Answer == 'none') {
+						obj1.Answer = ''
+					} else {
+						obj1.Answer = item.Answer
+					}
+					obj1.Content = ''
+					arr.push(obj1)
+				} else if (item.ThemeType === '单选题') {
+					let obj2 = {}
+					obj2.QuestionId = item.ThemeId
+					if (item.Answer == 'none') {
+						obj2.Answer = ''
+					} else {
+						obj2.Answer = item.Answer
+					}
+					obj2.Content = ''
+					arr.push(obj2)
+				} else if (item.ThemeType === '多选题') {
+					let obj3 = {}
+					obj3.QuestionId = item.ThemeId
+					if (Array.isArray(item.Answer)) {
+						obj3.Answer = item.Answer.sort().join('')
+					} else {
+						obj3.Answer = ''
+					}
+					obj3.Content = ''
+					arr.push(obj3)
+				} else if (item.ThemeType === '简答题') {
+					let obj4 = {}
+					obj4.QuestionId = item.ThemeId
+					obj4.Answer = ''
+					if (item.Answer == 'none') {
+						obj4.Content
+					} else {
+						obj4.Content = item.Answer
+					}
+					arr.push(obj4)
+				} else if (item.ThemeType === '填空题') {
+					let obj5 = {}
+					obj5.QuestionId = item.ThemeId
+					obj5.Answer = ''
+					if (Array.isArray(item.Answer)){
+						obj5.Content = item.Answer.sort().join('♪')
+					} else {
+						obj5.Content = ''
+					}
+					arr.push(obj5)
+				}
+			})
+			const msg = await UpdateUserExam({
+				ExamId: this.examId,
+				Ticket: this.Ticket,
+				Data: arr
+			})
+			if (msg.Type == 1) {
+				let endTime = ''
+				if (this.timeLimit) {
+					const useTime = 60 * this.minute + Number.parseInt(this.second)
+					console.log(useTime)
+					const limitTime = 60 * this.timeInfo
+					console.log('timeInfo', this.timeInfo)
+					console.log('limitTime', limitTime)
+					endTime = limitTime - useTime
+				} else {
+					endTime = 0
+				}
+				if (this.couldSeeResult) {
+					const examResult = [...msg.Data.Type0Questions, ...msg.Data.Type1Questions, ...msg.Data.Type2Questions]
+					uni.setStorageSync('weChat-examList-' + this.examId, JSON.stringify(examResult)) 
+				}
+				this.isUpTest = true
+				let str = '/examCenter/examResult/examResult?hp=' + msg.Data.PassFlag + '&ut=' + endTime + '&sc=' + msg.Data.Score + '&tc=' + msg.Data.TotalCount + '&rc=' + msg.Data.RightCount + '&dID=' + msg.Data.DetailId + '&eID=' + this.examId + '&et=' + this.TriesLimit + '&fromType=' + this.fromType
+				uni.reLaunch({
+					url: str
+				})
+			} else if (msg.Message == '等待阅卷 :)') {
+				this.isUpTest = true
+				this.content = '答案提交成功，请等待阅卷。'
+				this.show = true
+			} else if (msg.Message == 'validate:请勿输入带标签的内容! :*') {
+				this.$refs.uToast.show({
+					title: '您输入的内容存在敏感字符',
+					type: 'warning',
+					position: 'bottom',
+					icon: false
+				})
+			}
+		}
+	},
+	components: {
+		examTopicItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examTestPage{
+	height: 100vh;
+	padding-top: 60rpx;
+	padding-bottom: 125rpx;
+	position: relative;
+	.etp_time{
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		width: 100%;
+		height: 60rpx;
+		line-height: 60rpx;
+		border-bottom: 1rpx solid #a8a8a8;
+		font-size: 32rpx;
+		background: #fff;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+	.etp_time_timeRecord{
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+	}
+	.etp_tipicpart{
+		width: 100%;
+		height: 100%;
+		position: relative;
+	}
+	.etp_topiclist{
+		width: 100%;
+		height: 100%;
+		background: #fff;
+		position: absolute;
+		top: 0;
+		left: 0;
+		transition: .5s;
+		opacity: 0;
+		z-index: 1;
+	}
+	.etp_topiclist_onShow{
+		opacity: 1;
+		z-index: 15;
+	}
+	.etp_topiccontrol{
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		height: 125rpx;
+		background: #fff;
+		position:  absolute;
+		bottom: 0;
+		left: 0;
+		.etp_tc_left, .etp_tc_right{
+			flex: 1;
+			position: relative;
+			font-size: 32rpx;
+		}
+		.etp_tc_middle{
+			flex: 1;
+			height: 100%;
+			line-height: 125rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			font-size: 32rpx;
+		}
+		.etp_tc_btn{
+			width: 160rpx;
+			height: 70rpx;
+			line-height: 70rpx;
+			text-align: center;
+			margin: auto;
+			border-radius: 10rpx;
+			font-size: 32rpx;
+			color: #fff;
+			background: $brand-primary;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+	}
+}
+</style>

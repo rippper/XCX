@@ -27,7 +27,8 @@
 </template>
 
 <script>
-import { Login } from '../../common/getData.js';
+import { Login, GetUserInfo } from '../../common/getData.js';
+import { mapMutations } from 'vuex';
 import CryptoJS from 'crypto-js';
 
 export default {
@@ -53,6 +54,7 @@ export default {
 		}
 	},
 	methods: {
+		...mapMutations(['setUserInfo']),
 		async LoginMethods () {
 			const msg = await Login({
 				Account: this.Account,
@@ -61,7 +63,6 @@ export default {
 			})
 			if (msg) {
 				if (msg.Type === 1) {
-					console.log(msg.Type)
 					if (this.Remember) {
 						this.encrypt('a_app', this.Account)
 						this.encrypt('p_app', this.Password)
@@ -71,16 +72,11 @@ export default {
 						this.encrypt('p_app', '')
 						uni.setStorageSync('remember', false)
 					}
-					if (this.reason === 'unlogin') {
-						uni.navigateBack()
-					} else {
-						uni.switchTab({
-							url: '/pages/tabBar/index/index'
-						})
-					}
+					uni.navigateBack()
+					let info = await GetUserInfo()
+					uni.setStorageSync('userInfo', info.Data)
+					this.setUserInfo(info.Data)
 				} else {
-					console.log(msg)
-					console.log(msg.Message)
 					this.$refs.uToast.show({
 						title: msg.Message,
 						type: 'warning',
@@ -89,14 +85,12 @@ export default {
 					})
 				}
 			}
-			
 		},
 		rememberChange () {
 			this.Remember = !this.Remember
 		},
 		/*加密*/
 		encrypt (name, value) {
-			console.log(value)
 			let encryptText = CryptoJS.AES.encrypt(value, CryptoJS.enc.Utf8.parse(this.key), {
 			  iv: CryptoJS.enc.Utf8.parse(this.iv),
 			  mode: CryptoJS.mode.ECB,
@@ -122,14 +116,6 @@ export default {
 				icon: false
 			})
 		}
-		// async LoginOut () {
-		// 	const msg = await LoginOut()
-		// 	if (msg.Type == 1) {
-		// 		console.log('登出成功')
-		// 	} else {
-		// 		console.log(data.Message)
-		// 	}
-		// }
 	}
 }
 </script>
@@ -169,16 +155,23 @@ export default {
 		width: 630rpx;
 		height: 80rpx;
 		padding-left: 80rpx;
-		margin: 0 auto;
-		border-bottom: 1rpx solid #fff;
+		margin: 0 auto 15rpx;
+		border-radius: 15rpx;
 		background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAArCAYAAAAQVipNAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTM4IDc5LjE1OTgyNCwgMjAxNi8wOS8xNC0wMTowOTowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTcgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjZDQTZBQUU2QTcwQTExRUFBOTM2RDlFNkMyMTE2RDE0IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjZDQTZBQUU3QTcwQTExRUFBOTM2RDlFNkMyMTE2RDE0Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NkNBNkFBRTRBNzBBMTFFQUE5MzZEOUU2QzIxMTZEMTQiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NkNBNkFBRTVBNzBBMTFFQUE5MzZEOUU2QzIxMTZEMTQiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5PyeGPAAAD60lEQVR42sSYS0hUYRTH72sezoyO4SMt0ERSs0WLaFG4qJ2QCeWiTbVooRSCtKlFUBCtIkJtYTvRhShBgdPCFkZgRlqWYWBgZZIOk0qOjvOeubf/ke/G+LzO3Jv3wJ+Rmfud87vf45zzyUtc+hZXFBc+LkF10HGoiP3khT5B/VAPtKrly8Lz67+Q0pCiKDzUDP1RtG0RamRjuO20MUY6MA7ouZK+9UFWQ4EwUJBl2aNkaBj7bLuZyggoHo/fUnRaMplsMQTI5/MVYuCqXiDM0rLf79+nBSRonQK3292IDyen03iez7Hb7Ve1ntMCEiRJquMMMkEQ6nHMd4zJa+Qha0yW/Xi7LCOAsETLVkEoQB6Lb5eHdqRtbW93GwXDls2t7t2MluzN0FCSM95EPUuWHUkkfoiimG8ESSKR8GZZLFVYskBGS0YWCATGjZqalZUVqnOKnlMmf5ua8hgF9HVy0qMFpJUY7eWlpWXhcHhab2IMhUJT+bm5peRTT6aWoIK+3t4rlP11ZOlEd1fXRfjKJ596gGjTu6Cy0ZGR+5kCvR0evgsfhyAn+dRbXGmW8qDKV4ODt1EkQ2kU1ODLgYGbGFvBfEhGVHuaJRu0H6q60dJS5/V6B2gZdlqi2dlZz7Wmplp6EaiQ+eC1gPhdtrCULGxQDtVbKOtCQ0Ph9ebmmpKSkkqH05lHD4WCwcXp6enJx21twy88ngV8FYaWKXtA0TgRaLSwfBo9NY20QA7IxT4tLHWoXimgDMUYDPXUobWWaguYrYDS6fEVFojKSYTNmC0FimO/xdlzUQaSVvnhpczznMAkbpghApABIu/Gya5nCA4p0CmoHMo1KFn7oSnoHQPXztRY6mzo3i6vOpnaAnQHcu147PHAMeinsnf2HareEigSiVSyy91e2wJil68DojsTktmoYpIh9tC6W0csFmtAe3mCM8kQu2Y1EjnHpSS1y5zJhhsJ/fNi7Uoi4qpz0mwgtMnEIBKQBLp8s4GwbMVrLESFfRU1GwgMQXWG+Gg0OmM2EA7WL3UPcfPz86/NBvrt8w2qp0zu6uzsRi6ImQWD2OEnHR09a60LkpEVKsYVpc2sxPhlYuIhMRALAQlQrtNmq5ibm+vfa5iZmZmniH0YDG5iUWsZ9btFDqv16MexsUe48gb/NwhiBHCTeUAxKTZj+FdcaZYc0EGo+nx9/ZnP4+NtS0tLH7D7F7DGSQPqVZJ8wed7vHTr2dra04h1BDrAYvMbm3za4HbWyLvY3+KGjlB3umGNWYK1uAGmCOvFN7WwaiOfxWRLKcK8ATByCkyIgcRT7/vb9dQCAxFTYIwAUqHUWdrUd/8VYABgo1lx2DOoyQAAAABJRU5ErkJggg==") no-repeat;
 		background-size: 36rpx 43rpx;
+		background-color: rgba(0,0,0,0.3);
 		background-position: 25rpx 18rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
 		input{
-			width: 540rpx;
-			height: 80rpx;
-			line-height: 80rpx;
+			width: 530rpx;
+			height: 70rpx;
+			line-height: 70rpx;
 			font-size: 30rpx;
+			color: #fff;
+			border-bottom: 1rpx solid #fff;
 		}
 	}
 	.lcf_password{
@@ -186,15 +179,22 @@ export default {
 		height: 80rpx;
 		padding-left: 80rpx;
 		margin: 0 auto;
-		border-bottom: 1rpx solid #fff;
+		border-radius: 15rpx;
 		background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAArCAYAAAD/lEFzAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTM4IDc5LjE1OTgyNCwgMjAxNi8wOS8xNC0wMTowOTowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTcgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjZERjgwMjAyQTcwQTExRUE5NDA3RkEwRkRCRjY4RUY3IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjZERjgwMjAzQTcwQTExRUE5NDA3RkEwRkRCRjY4RUY3Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NkRGODAyMDBBNzBBMTFFQTk0MDdGQTBGREJGNjhFRjciIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NkRGODAyMDFBNzBBMTFFQTk0MDdGQTBGREJGNjhFRjciLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5tdb1oAAADvElEQVR42txYS08TURRmSqc8xlpLETBAxMijRuWhibpzoe5MiIkb41KXGDZEd4a4JJq4cEOI+hMQogbEBBYKCIYgiELCwxBM0zYtfUtfc/2OmRIYhrHtFJhwki93ejtz7jf3nHvud8dozMvc4owVoWkFbgKXgJOACYgCS8Ak0A+8BWJqvniO29lpzACMsXygHXCx9GwNuAdwQJ4SlMbJhFAFMMqys0HAmlNSeLgKWGQaTBTF72hs6ZDijP/PnwI8PMZxXIv8PxrL7/dPuZzO2VAotG42m21l5eXNFoulkXwr3D8CP9dwKWrKqXg8/ljpzT0ez+eHHR2tuKcZOA+cAxrp95POzts+n29K6blYLPZAU/h+rawcw7SH5I5XV1d7i3i+CffYgRqgEjghtaeov6K09ILT6RxSCKPjx9ycKWtS4XD4vtwpwrRw3GqlGTkJlADFQAFgkloBsBHZs3b7xY2Njd9yH4FA4JYaKYNKOhlgN+SdX8bHu9dhuPQAfuRcBIgCMWrRF6F++n9hft49OzPzakfKGI3XkUvcrgOrkMqH1cs7n3Z1fUDjkwZPKiwMBiRooonc4MDAR4W3PUP+dx1ZJXyFSMrlrdOeTCZD6C8D+C3lIk+lMJoaamur5OGLRCJjFOqswocZNsn6RGkrSaS5IyWWFhfDmUZJjdRuMSdiLE1STCnEtO2o+FclpTZQuhs3y+R+LaT23HRJyiib7itomoCiYDBowtI9si3JOI53eb13rVZrNN0BHG534Q4NxfMV3kCgjbQW1Tm0U6hbX7exQugtwBA7WHsHCJvbDOrPa6YDA4/ulHQxYApDFLKDziXw8iNnSijReT0QknLWQnwM8mTXw+Iz5KIsQM78dDgcgxCErpyUKUyTWUtyQpq8gI8WUpz2urrLUKSjWvwRH02kEomEzyIIJIVPSwq07mVPzx2tpDTlE5YwxGl4XRJ1tPEWuN3utZxW9CwtSIIOZUVEVY5VVVeHD3TvwzZECiBBhFKyRhCEpO42ZEhopjtSh1a6HD5SSHShvqFhm4/KykpbLlSepoqO0+6j1JFqZHi4ECfi91qLJ0kXM5Z0QOO7faIvePB5FTt9jRZHqHVHc0UqZ0ak9JbobDPRcTxf1QOjaDS6nCLFvk1PP9cDqcmJiWf/Zkv6vlTT39fXjpU0J4pidJ8PC1GMO/umt7dNkj/FlOik0Ukbl0haPV/tnL9HeUSb+B/ASzLIKH1BCUo3CNJH+v0kRQojTqpaQiL1dZiTZog/wJmKSy37K8AAHmfhxozn4k0AAAAASUVORK5CYII=") no-repeat;
 		background-size: 37rpx 43rpx;
+		background-color: rgba(0,0,0,0.3);
 		background-position: 25rpx 18rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
 		input{
-			width: 540rpx;
-			height: 80rpx;
-			line-height: 80rpx;
+			width: 530rpx;
+			height: 70rpx;
+			line-height: 70rpx;
 			font-size: 30rpx;
+			color: #fff;
+			border-bottom: 1rpx solid #fff;
 		}
 	}
 	.phcolor{
@@ -204,6 +204,8 @@ export default {
 		width: 630rpx;
 		height: 80rpx;
 		margin: 0 auto;
+		display: flex;
+		flex-direction: row;
 		.lcf_rp_clickpart{
 			height: 100%;
 			display: flex;
@@ -238,7 +240,7 @@ export default {
 			text-align: center;
 			font-size: 33rpx;
 			color: #fff;
-			background: #1c4f8a;
+			background: $brand-primary;
 		}
 	}
 }

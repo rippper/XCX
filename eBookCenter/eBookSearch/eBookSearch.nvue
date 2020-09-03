@@ -1,0 +1,225 @@
+<template>
+	<view class="eBookSearch">
+		<view class="ebs_searchpart">
+			<u-search placeholder="请输入电子书名称" v-model="Keyword" :clearabled="true" @search="searchBook" @custom="searchBook"></u-search>
+		</view>
+		<search-history :class="{ 'history_disappear': searched }" :historyList="eBookHistory" @makeSelect="searchBook" @delete="deleteHistory"></search-history>
+		<scroll-view class="ebs_bookresult" :class="{ 'ebookresult_disappear': !searched, 'ebs_noDataBg': noDataBg }" scroll-y @scrolltolower="GetBookInfoList">
+			<view class="ebs_br_item" :class="{ 'no_border_top': index == 0 }" v-for="(item, index) in eBookList" :key="index" @click="linkToContext(item)">
+				<view class="ebs_br_icon">
+					<image src="../static/eBookSearch.png"></image>
+				</view>
+				<view class="ebs_br_test" v-text="item.BookName"></view>
+			</view>
+			<u-loadmore :class="{ 'ebs_noData': noDataBg }" :status="status"/>
+		</scroll-view>
+		<u-toast ref="uToast" />
+	</view>
+</template>
+
+<script>
+import searchHistory from '../../components/searchHistory/searchHistory.nvue';
+import { GetBookInfoList } from '../../common/getData.js';
+import { imgAddress } from '../../common/plugin.js';
+export default {
+	name: 'eBookSearch',
+	data () {
+		return {
+			Keyword: '',
+			eBookHistory: '',
+			eBookList: [],
+			Pages: 1,
+			Rows: 20,
+			totalCount: 0,
+			noDataBg: false,
+			searched: false, //课程列表和历史纪录界面切换
+			inTheEnd: false, // 是否到达底部
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onShow () {
+		this.getHistory()
+	},
+	methods: {
+		searchBook (value) {
+			if (value == '') {
+				this.$refs.uToast.show({
+					title: '请输入电子书名称',
+					type: 'warning',
+					icon: false,
+					position: 'bottom'
+				})
+				return false
+			}
+			this.Page = 1
+			this.status = 'loading'
+			this.noDataBg = false
+			this.inTheEnd = false
+			this.totalCount = 0
+			this.eBookList = []
+			this.historyEdit(value)
+		},
+		historyEdit (value) {
+			this.Keyword = value
+			let num = ''
+			let repeat = this.eBookHistory.some((item, index) => {
+				if (item == value) {
+					num = index
+					return true
+				}
+			})
+			if (repeat) {
+				this.eBookHistory.splice(num, 1)
+				this.eBookHistory.unshift(value)
+				uni.setStorageSync('eBookHistory', this.eBookHistory)
+				this.GetBookInfoList()
+				return false
+			}
+			if (this.eBookHistory.length > 12) {
+				this.eBookHistory.pop()
+				this.eBookHistory.unshift(value)
+				uni.setStorageSync('eBookHistory', this.eBookHistory)
+			} else {
+				this.eBookHistory.unshift(value)
+				uni.setStorageSync('eBookHistory', this.eBookHistory)
+			}
+			this.GetBookInfoList()
+		},
+		getHistory () {
+			let arr = uni.getStorageSync('eBookHistory')
+			Array.isArray(arr) ? this.eBookHistory = arr : this.eBookHistory = []
+		},
+		deleteHistory () {
+			uni.removeStorageSync('eBookHistory')
+			this.eBookHistory = []
+		},
+		linkToContext (obj) {
+			uni.setStorageSync('eBookMsg', JSON.stringify(obj))
+			uni.navigateTo({
+				url: '/eBookCenter/eBookSection/eBookSection'
+			})
+		},
+		async GetBookInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetBookInfoList({
+				Keyword: this.Keyword,
+				Pages: this.Pages,
+				Rows: this.Rows
+			})
+			if (msg.Type == 1) {
+				this.searched = true
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.map(item => {
+					item.BookImg = item.BookImg ? imgAddress(item.BookImg) : require('../../static/errorBookImg.png')
+					item.CreateTime = ''
+				})
+				this.eBookList = [...this.eBookList, ...msg.Data.List]
+				if (this.eBookList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			}
+		}
+	},
+	components: {
+		searchHistory
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookSearch{
+	height: 100vh;
+	.ebs_searchpart{
+		width: 100%;
+		padding: 20rpx;
+		background: #fff;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	.searchHistory{
+		margin-top: 120rpx;
+	}
+	.u-search{
+		flex-direction: row;
+	}
+	.u-content{
+		flex-direction: row;
+	}
+	.ebookresult_disappear{
+		height: 100%;
+		padding-top: 104rpx;
+		background: #fff;
+	}
+	.history_disappear{
+		display: none;
+	}
+	.ebookresult_disappear{
+		display: none;
+	}
+	.ebs_bookresult{
+		width: 100%;
+		height: 100%;
+		padding: 104rpx 30rpx 0;
+		background: #fff;
+	}
+	.ebs_br_item{
+		width: 100%;
+		height: 80rpx;
+		padding-left: 15rpx;
+		border-top: 1rpx solid #e8e8e8;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		.ebs_br_icon{
+			margin-right: 20rpx;
+			image{
+				width: 40rpx;
+				height: 40rpx;
+			}
+		}
+		.ebs_br_test{
+			width: 600rpx;
+			height:80rpx;
+			line-height: 80rpx;
+			font-size: 32rpx;
+			@include ellipsis_two(1);
+		}
+	}
+	.no_border_top{
+		border-top: none;
+	}
+	.ebs_noData{
+		display: none;
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.ebs_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

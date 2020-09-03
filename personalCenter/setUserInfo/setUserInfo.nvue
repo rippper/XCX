@@ -1,0 +1,287 @@
+<template>
+	<view class="setUserInfo">
+		<view class="sui_topinput">
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					姓名
+				</view>
+				<view class="sui_tp_input">
+					<input type="text" v-model="userName">
+				</view>
+			</view>
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					部门
+				</view>
+				<view class="sui_tp_input">
+					<view v-text="Department" @click="selectGroup"></view>
+				</view>
+			</view>
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					身份证号
+				</view>
+				<view class="sui_tp_input">
+					<input type="text" v-model="IdNumber">
+				</view>
+			</view>
+		</view>
+		<view class="sui_middleinput">
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					电子邮箱
+				</view>
+				<view class="sui_tp_input">
+					<input type="text" v-model="Email">
+				</view>
+			</view>
+		</view>
+		<view class="sui_bottominput">
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					性别
+				</view>
+				<view class="sui_tp_choose">
+					<radio-group class="radio-group" @change="radioChange">
+						<label class="radio-group-label">
+							<radio :value="'男'" :checked="Sex == '男'" />
+							<view>
+								<text>男</text>
+							</view>
+						</label>
+						<label class="radio-group-label">
+							<radio :value="'女'" :checked="Sex == '女'" />
+							<view>
+								<text>女</text>
+							</view>
+						</label>
+					</radio-group>
+				</view>
+			</view>
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					出生日期
+				</view>
+				<view class="sui_tp_input">
+					<view v-text="Birthday" @click="openClander"></view>
+				</view>
+			</view>
+			<view class="sui_tp_box">
+				<view class="sui_tp_label">
+					办公室电话
+				</view>
+				<view class="sui_tp_input">
+					<input type="text" v-model="Telephone">
+				</view>
+			</view>
+		</view>
+		<view class="submitBtn" @click="UpdateUserInfo">保存</view>
+		<u-picker mode="time" v-model="show" :params="params" :endYear="endYear" @confirm="change"></u-picker>
+		<u-modal v-model="modelShow" :content="content" @confirm="goBack"></u-modal>
+		<u-toast ref="uToast"/>
+	</view>
+</template>
+
+<script>
+import { GetUserInfo, UpdateUserInfo } from '../../common/getData.js';
+export default {
+	name: 'setUserInfo',
+	data () {
+		return {
+			userAccount: '',
+			userName: '',
+			Department: '',
+			DepartmentId: '',
+			IdNumber: '',
+			Email: '',
+			Sex: '男',
+			Birthday: '',
+			Telephone: '',
+			endYear: '',
+			show: false,
+			modelShow: false,
+			content: '',
+			params: {
+				year: true,
+				month: true,
+				day: true,
+				hour: false,
+				minute: false,
+				second: false
+			}
+		}
+	},
+	onShow () {
+		if (!this.isLoad){
+			this.GetUserInfo()
+		}
+		this.checkGroupObj()
+	},
+	methods: {
+		radioChange (e) {
+			this.Sex = e.detail.value
+		},
+		change (e) {
+			this.Birthday = e.year + '-' + e.month + '-' + e.day
+		},
+		openClander () {
+			this.show = true
+		},
+		selectGroup () {
+			uni.navigateTo({
+				url: '/personalCenter/groupSelect/groupSelect'
+			})
+		},
+		checkGroupObj () {
+			let groupObj = uni.getStorageSync('groupObj')
+			if (groupObj) {
+				this.Department = JSON.parse(groupObj).Name
+				this.DepartmentId = JSON.parse(groupObj).Id
+				uni.removeStorageSync('groupObj')
+			}
+		},
+		goBack () {
+			uni.navigateBack()
+		},
+		async GetUserInfo () {
+			let msg = await GetUserInfo()
+			if (msg.Type == 1) {
+				this.isLoad = true
+				this.userAccount = msg.Data.UserAccount
+				this.userName = msg.Data.Username
+				this.Department = msg.Data.GroupName
+				this.DepartmentId = msg.Data.GroupId
+				this.IdNumber = msg.Data.IdCard
+				this.Email = msg.Data.Email
+				this.Sex = msg.Data.Sex
+				this.Birthday = msg.Data.Birthday.substr(0, 10)
+				this.Telephone = msg.Data.Tel
+				this.endYear = new Date().getFullYear()
+			}
+		},
+		async UpdateUserInfo () {
+			if (this.Name) {
+				this.$refs.uToast.show({
+					title: '请确认姓名是否正确',
+					type: 'error'
+				})
+				return false
+			}
+			if (this.IdNumber) {
+				let regExp = /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
+				let result = regExp.test(this.IdNumber)
+				if (!result) {
+					this.$refs.uToast.show({
+						title: '请输入正确的身份证号码',
+						type: 'error'
+					})
+					return false
+				}
+			}
+			if (this.Email) {
+				let regExp = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+				let result = regExp.test(this.Email)
+				if (!result) {
+					this.$refs.uToast.show({
+						title: '请输入正确的电子邮箱',
+						type: 'error'
+					})
+					return false
+				}
+			}
+			let msg = await UpdateUserInfo({
+				Account: this.userAccount,
+				Name: this.userName,
+				GroupId: this.DepartmentId,
+				IdCard: this.IdNumber,
+				Email: this.Email,
+				Sex: this.Sex,
+				Birthday: this.Birthday + ' 00:00:00',
+				Tel: this.Telephone
+			})
+			if (msg.Type === 1) {
+				this.modelShow = true,
+				this.content = '信息修改成功'
+			} else {
+				this.$refs.uToast.show({
+					title: msg.Message,
+					type: 'error'
+				})
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.setUserInfo{
+	width: 100%;
+	height: 100vh;
+	
+	.sui_topinput{
+		margin-bottom: 20rpx;
+		background: #fff;
+	}
+	.sui_middleinput{
+		margin-bottom: 20rpx;
+		background: #fff;
+	}
+	.sui_bottominput{
+		margin-bottom: 80rpx;
+		background: #fff;
+	}
+	.sui_tp_box{
+		width: 100%;
+		height: 100rpx;
+		padding: 0 30rpx;
+		border-bottom: 1rpx solid #e8e8e8;
+		font-size: 32rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.sui_tp_input{
+		width: 60%;
+		height: 100rpx;
+		line-height: 100rpx;
+		font-size: 32rpx;
+		input{
+			width: 100%;
+			height: 100rpx;
+			line-height: 100rpx;
+		}
+	}
+	.sui_tp_choose{
+		width: 80%;
+	}
+	.radio-group{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.radio-group-label{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+	.submitBtn{
+		width: 80%;
+		height: 100rpx;
+		line-height: 100rpx;
+		margin: 0 auto;
+		border-radius: 15rpx;
+		text-align: center;
+		font-size: 32rpx;
+		color: #fff;
+		background: $brand-primary;
+	}
+	.u-picker-header{
+		flex-direction: row;
+	}
+	.u-column-item{
+		flex-direction: row;
+	}
+}
+</style>

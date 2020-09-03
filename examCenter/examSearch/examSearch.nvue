@@ -1,7 +1,7 @@
 <template>
 	<view class="examSearch">
 		<view class="es_searchpart">
-			<u-search placeholder="请输入课程名称" v-model="Keyword" :clearabled="true" @search="searchExam" @custom="searchExam"></u-search>
+			<u-search placeholder="请输入测试名称" v-model="Keyword" :clearabled="true" @search="searchExam" @custom="searchExam"></u-search>
 		</view>
 		<search-history :class="{ 'history_disappear': searched }" :historyList="examHistory" @makeSelect="searchExam" @delete="deleteHistory"></search-history>
 		<scroll-view class="es_courseresult" scroll-y :class="{ 'examresult_disappear': !searched, 'cr_noDataBg': noDataBg }" @scrolltolower="GetExamList">
@@ -35,7 +35,6 @@ export default {
 				loading: '加载中',
 				nomore: '没有更多的内容了'
 			}
-			
 		}
 	},
 	onShow () {
@@ -45,7 +44,7 @@ export default {
 		searchExam (value) {
 			if (value == '') {
 				this.$refs.uToast.show({
-					title: '请输入课程名称',
+					title: '请输入测试名称',
 					type: 'warning',
 					icon: false,
 					position: 'bottom'
@@ -127,7 +126,6 @@ export default {
 				}
 				this.Page += 1
 			}
-			console.log(msg)
 		}
 	},
 	components: {

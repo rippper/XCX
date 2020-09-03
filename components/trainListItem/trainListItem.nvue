@@ -1,0 +1,171 @@
+<template>
+	<view class="trainListItem" @click="linkToNoticeDetail">
+		<view class="tli_title">
+			<view class="tli_title_typebtngroup">
+				<view class="tli_title_tbg_unjoin" v-if="trainInfo.Status == 'UnJoin'">未报名</view>
+				<view class="tli_title_tbg_join" v-else-if="trainInfo.Status == 'Join'">已报名</view>
+				<view class="tli_title_tbg_audit" v-else-if="trainInfo.Status == 'UnAudit'">审核中</view>
+			</view>
+			<view class="tli_title_content" v-text="trainInfo.Name"></view>
+		</view>
+		<view class="tli_info">
+			<view class="tli_info_left">
+				<view class="tli_info_left_applypart">
+					<image src="../../trainCenter/static/bh_sandclock.png"></image>
+					<view>
+						<view class="tli_info_endtime">报名截止时间:</view>
+						<text class="tli_info_timepart_wordpart" v-text="trainInfo.SignEndDate.substr(0, 10)"></text>
+					</view>
+				</view>
+				<view class="tli_info_left_applypart">
+					<image src='../../trainCenter/static/bh_clock.png'></image>
+					<view>
+						<view class="tli_info_timepart">培训班日期:</view>
+						<view class="tli_info_timepart_wordpart">
+							<text v-text="trainInfo.StartDate"></text>
+							<text> ~ </text>
+							<text v-text="trainInfo.EndDate"></text>
+						</view>
+					</view>
+					
+				</view>
+			</view>
+			<view class="tli_info_right">
+				<view class="tli_info_right_img">
+					<image src="../../static/bh_applyIcon.png"></image>
+				</view>
+				<view class="tli_info_right_word">
+					<text class="tli_info_right_numberpart" v-text="trainInfo.Registered"></text>
+					<text>人已报名</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'trainListItem',
+	props: {
+		trainInfo: Object
+	},
+	methods: {
+		linkToNoticeDetail () {
+			uni.navigateTo({
+				url: '/trainCenter/trainCourse/trainCourse?Id=' + this.trainInfo.Id
+			})
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.trainListItem{
+	width: 690rpx;
+	margin: 20rpx auto 0;
+	padding: 10rpx 20rpx;
+	background: #fff;
+	.tli_title{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		.tli_title_typebtngroup{
+			height: 80rpx;
+			margin-right: 15rpx;
+			font-size: 26rpx;
+			text-align: center;
+			color: #fff;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			.tli_title_tbg_unjoin{
+				padding: 5rpx 15rpx;
+				border-radius: 5rpx;
+				background: rgb(141, 148, 166);
+			}
+			.tli_title_tbg_join{
+				padding: 5rpx 15rpx;
+				border-radius: 5rpx;
+				background: rgb(69, 150, 83);
+			}
+			.tli_title_tbg_audit{
+				padding: 5rpx 15rpx;
+				border-radius: 5rpx;
+				background: rgb(141, 148, 166);
+			}
+		}
+		.tli_title_content{
+			width: 80%;
+			height: 80rpx;
+			line-height: 80rpx;
+			font-size: 38rpx;
+			font-weight: bold;
+			@include ellipsis_two(1);
+		}
+	}
+	.tli_info{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.tli_info_left{
+			font-size: 32rpx;
+			color: #888;
+			.tli_info_left_applypart{
+				padding-left: 15rpx;
+				margin-bottom: 15rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				image{
+					width: 42rpx;
+					height: 42rpx;
+					margin-right: 20rpx;
+				}
+			}
+			.tli_info_endtime{
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				image{
+					width: 42rpx;
+					height: 42rpx;
+					margin-right: 20rpx;
+					position: relative;
+					right: 4rpx;
+				}
+			}
+			.tli_info_timepart_wordpart{
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+			}
+		}
+		.tli_info_right{
+			.tli_info_right_img{
+				width: 150rpx;
+				image{
+					width: 107rpx;
+					height: 125rpx;
+					margin: 0 auto;
+				}
+			}
+			.tli_info_right_word{
+				width: 150rpx;
+				text-align: center;
+				font-size: 26rpx;
+				color: #888;
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				.tli_info_right_numberpart{
+					color: $brand-primary;
+				}
+			}
+		}
+	}
+}
+</style>

@@ -1,0 +1,92 @@
+<template>
+	<scroll-view scroll-y class="articleDetail">
+		<view class="ad_articletitle" v-text="articleInfo.Name"></view>
+		<view class="ad_author">作者: {{ articleInfo.Author }}</view>
+		<view class="ad_articlesource">来源: {{ articleInfo.Author }}</view>
+		<view class="ad_articleinfo">
+			<text class="ad_articleinfo_date">日期: {{ articleInfo.CreatedDate }}</text>
+			<text class="ad_articleinfo_watcher">阅读量: {{ articleInfo.Click }}</text>
+		</view>
+		<view class="ad_content" v-html="articleInfo.Content"></view>
+	</scroll-view>
+</template>
+
+<script>
+import { ArticleDetail } from '../../common/getData.js';
+import { formatRichText } from '../../common/plugin.js'
+export default {
+	name: 'articleDetail',
+	data () {
+		return {
+			id: '',
+			articleInfo: ''
+		}
+	},
+	onLoad (option) {
+		this.id = option.id
+		this.articleDetail()
+	},
+	methods: {
+		async articleDetail () {
+			let msg = await ArticleDetail({
+				Id: this.id
+			})
+			if (msg.Type === 1) {
+				msg.Data.CreatedDate =  msg.Data.CreatedDate.substr(0, 10)
+				msg.Data.Content = formatRichText(msg.Data.Content)
+				this.articleInfo = msg.Data
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.articleDetail{
+	height: 100vh;
+	background: #fff;
+	.ad_articletitle{
+		width: 690rpx;
+		padding-top: 30rpx;
+		margin: 0 auto 30rpx;
+		font-size: 42rpx;
+		font-weight: bold;
+		text-align: center;
+	}
+	.ad_author{
+		width: 690rpx;
+		padding-top: 20rpx;
+		margin: 0 auto;
+		font-size: 32rpx;
+		color: #999;
+	}
+	.ad_articlesource{
+		width: 690rpx;
+		margin: 0 auto;
+		font-size: 32rpx;
+		color: #999;
+	}
+	.ad_articleinfo{
+		width: 690rpx;
+		padding-bottom: 20rpx;
+		margin: 0 auto;
+		border-bottom: 1rpx solid #e8e8e8;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	.ad_articleinfo_date{
+		font-size: 32rpx;
+		color: #999;
+	}
+	.ad_articleinfo_watcher{
+		font-size: 32rpx;
+		color: #999;
+	}
+	.ad_content{
+		width: 690rpx;
+		padding-top: 30rpx;
+		margin: 0 auto
+	}
+}
+</style>

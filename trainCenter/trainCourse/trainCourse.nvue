@@ -1,0 +1,356 @@
+<template>
+	<view class="trainCourse">
+		<view class="tc_title" :class="{ 'tc_tth_bgblue': changeBg }">
+			<view class="tc_title_topheader" :style="'height:' + height + 'px'"></view>
+			<view class="tc_title_toptitle">
+				<view class="tc_title_tt_left">
+					<view class="tc_title_tt_left_inner" @click="goBack">
+						<image src="../../static/fanhui.png"></image>
+					</view>
+				</view>
+				<view class="tc_title_tt_center">培训班详情</view>
+				<view class="tc_title_tt_right"></view>
+			</view>
+		</view>
+		<scroll-view scroll-y="true" class="tc_content" @scroll="scrollListen">
+			<view class="tc_content_topimg"></view>
+			<view class="tc_content_list">
+				<view class="tc_content_list_title">
+					<text class="tc_content_list_title_inner" v-text="trainingInfo.Name"></text>
+					<view class="tc_content_list_title_labelpart">
+						<view class="tc_clt_join" v-if="trainingInfo.Status == 'Join'">已报名</view>
+						<view class="tc_clt_unjoin" v-else-if="trainingInfo.Status == 'UnJoin'">未报名</view>
+						<view class="tc_clt_unadult" v-else-if="trainingInfo.Status == 'UnAudit'">审核中</view>
+					</view>
+				</view>
+				<view class="tc_content_list_item">
+					<view class="tc_cli_label">培训日期:</view>
+					<text class="tc_cli_content" v-text="trainingInfo.StartDate"></text>
+					<text class="tc_cli_content_word"> ~ </text>
+					<text class="tc_cli_content_word" v-text="trainingInfo.EndDate"></text>
+				</view>
+				<view class="tc_content_list_item">
+					<view class="tc_cli_label">截止日期:</view>
+					<text class="tc_cli_content" v-text="trainingInfo.SignEndDate"></text>
+				</view>
+				<view class="tc_content_list_item">
+					<view class="tc_cli_label">学习信息:</view>
+					<text class="tc_studyinfo" v-text="trainingInfo.Description"></text>
+				</view>
+			</view>
+		</scroll-view>
+		<view class="tc_btnpart" :class="{ 'tc_btnpart_normal': height <= 30 }">
+			<view class="tc_btnpart_normal" @click="linkToCourseList">
+				<image src="../../static/bh_courselist.png"></image>
+				<text>课程列表</text>
+			</view>
+			<view class="tc_btnpart_normal" @click="linkToExamList">
+				<image src="../../static/bh_exam.png"></image>
+				<text>考试列表</text>
+			</view>
+			<view class="tc_btnpart_apply">
+				<view class="tc_bpa_join" v-if="trainingInfo.Status == 'UnAudit'" @click="cancelApplyTrain">取消报名</view>
+				<view class="tc_bpa_unjoin" v-else-if="trainingInfo.Status == 'UnJoin'" @click="applyTrain">立即报名</view>
+				<view class="tc_bpa_unadult" v-else-if="trainingInfo.Status == 'Join'">您已报名成功</view>
+			</view>
+		</view>
+		<u-toast ref="uToast" />
+	</view>
+</template>
+
+<script>
+import { UpdateTrainingStudentup, UpdateTrainingStudentdown, GetTrainingDetail } from '../../common/getData.js';
+
+export default {
+	name: 'trainCourse',
+	data () {
+		return {
+			classId: '',
+			winH: '',
+			height: '',
+			rpx: '', // 页面宽度比例
+			titleHeight: '', // 顶部导航栏长度
+			changeBg: false,
+			trainingInfo: '' // 培训班信息
+		}
+	},
+	onLoad (option) {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+				this.titleHeight = this.height + 44
+				this.rpx = 750 / res.windowWidth
+			}
+		})
+		this.classId = option.Id
+	},
+	onShow () {
+		this.GetTrainingDetail()
+	},
+	methods: {
+		scrollListen (e) {
+			e.detail.scrollTop > 471 / this.rpx - this.titleHeight ? this.changeBg = true : this.changeBg = false
+		},
+		linkToCourseList () {
+			if (this.trainingInfo.Status == 'Join') {
+				uni.navigateTo({
+					url: '/trainCenter/trainCourseList/trainCourseList?Id=' + this.classId
+				})
+			} else {
+				this.$refs.uToast.show({
+					title: '请先成功报名培训班',
+					type: 'warning'
+				})
+			}
+		},
+		linkToExamList () {
+			if (this.trainingInfo.Status == 'Join') {
+				uni.navigateTo({
+					url: '/trainCenter/trainExamList/trainExamList?Id=' + this.classId
+				})
+			} else {
+				this.$refs.uToast.show({
+					title: '请先成功报名培训班',
+					type: 'warning'
+				})
+			}
+		},
+		goBack () {
+			uni.navigateBack()
+		},
+		async applyTrain () {
+			let msg = await UpdateTrainingStudentup({
+				Id: this.classId
+			})
+			if (msg.Type === 1) {
+				if (msg.Data.IsUp == 'Join') {
+					this.$refs.uToast.show({
+						title: '已成功报名',
+						type: 'success'
+					})
+				} else if(msg.Data.IsUp == 'UnAudit') {
+					this.$refs.uToast.show({
+						title: '已成功报名, 请等待审核通过',
+						type: 'success'
+					})
+				}
+				
+				this.GetTrainingDetail()
+			} else {
+				this.$refs.uToast.show({
+					title: '报名失败,' + msg.Message,
+					type: 'error'
+				})
+			}
+		},
+		async cancelApplyTrain () {
+			let msg = await UpdateTrainingStudentdown({
+				Id: this.classId
+			})
+			
+			if (msg.Type === 1) {
+				this.$refs.uToast.show({
+					title: '已成功取消报名',
+					type: 'success'
+				})
+				this.GetTrainingDetail()
+			} else {
+				this.$refs.uToast.show({
+					title: '取消报名失败,' + msg.Message,
+					type: 'error'
+				})
+			}
+		},
+		async GetTrainingDetail () {
+			let msg = await GetTrainingDetail({
+				Id: this.classId
+			})
+			if (msg.Type === 1) {
+				msg.Data.SignEndDate = msg.Data.SignEndDate.substr(0, 10)
+				msg.Data.StartDate = msg.Data.StartDate.substr(0, 10)
+				msg.Data.EndDate = msg.Data.EndDate.substr(0, 10)
+				this.trainingInfo = msg.Data
+			}
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.trainCourse{
+	width: 100%;
+	height: 100vh;
+	.tc_title{
+		width: 100%;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 10;
+		transition: 0.3s;
+		.tc_title_toptitle{
+			width: 100%;
+			height: 44px;
+			display: flex;
+			flex-direction: row;
+			.tc_title_tt_left{
+				flex: 1;
+				.tc_title_tt_left_inner{
+					width: 120rpx;
+					height: 44px;
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+				}
+				image{
+					width: 30rpx;
+					height: 30rpx;
+					margin-left: 40rpx;
+				}
+			}
+			.tc_title_tt_center{
+				flex: 1;
+				line-height: 40px;
+				text-align: center;
+				font-size: 32rpx;
+				font-weight: bold;
+				color: #fff;
+			}
+			.tc_title_tt_right{
+				flex: 1;
+			}
+		}
+		
+	}
+	.tc_tth_bgblue{
+		background: $brand-primary;
+	}
+	.tc_content{
+		width: 100%;
+		height: 100%;
+		.tc_content_topimg{
+			width: 100%;
+			height: 471rpx;
+			@include setBackground('bh_trainImg.png');
+			background-size: 100%;
+		}
+	}
+	.tc_content_list{
+		width: 100%;
+		.tc_content_list_title{
+			width: 100%;
+			height: 120rpx;
+			padding-left: 15rpx;
+			background: #fff;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			.tc_content_list_title_inner{
+				max-width: 80%;
+				height: 120rpx;
+				line-height: 120rpx;
+				font-size: 46rpx;
+				font-weight: bold;
+				@include ellipsis_two(1);
+			}
+			.tc_content_list_title_labelpart{
+				margin-left: 15rpx;
+				font-size: 26rpx;
+				color: #fff;
+				text-align: center;
+				.tc_clt_join{
+					padding: 3rpx 10rpx;
+					background: #459653;
+				}
+				.tc_clt_unjoin{
+					padding: 3rpx 10rpx;
+					background: #8d94a6;
+				}
+				.tc_clt_unadult{
+					padding: 3rpx 10rpx;
+					background: #8d94a6;
+				}
+			}
+		}
+		.tc_content_list_item{
+			min-height: 120rpx;
+			background: #fff;
+			display: flex;
+			flex-direction: row;
+			font-size: 26rpx;
+			.tc_cli_label{
+				width: 20%;
+				height: 120rpx;
+				line-height: 120rpx;
+				text-align: center;
+				color: #aaa;
+			}
+			.tc_cli_content{
+				height: 120rpx;
+				padding: 0 0 0 20rpx;
+				line-height: 120rpx;
+			}
+			.tc_cli_content_word{
+				height: 120rpx;
+				line-height: 120rpx;
+			}
+			.tc_studyinfo{
+				width: 80%;
+				font-size: 26rpx;
+				padding: 40rpx 20rpx 20rpx;
+				text-indent: 1.5rem;
+			}
+		}
+	}
+	.tc_btnpart{
+		width: 100%;
+		height: 130rpx;
+		position: fixed;
+		bottom: 30rpx;
+		left: 0;
+		display: flex;
+		flex-direction: row;
+		.tc_btnpart_normal{
+			flex: 2;
+			background: #fff;
+			text-align: center;
+			font-size: 26rpx;
+			image{
+				width: 56rpx;
+				height: 83rpx;
+				padding: 17rpx 0 10rpx;
+				margin: 0 auto;
+			}
+		}
+		.tc_btnpart_apply{
+			flex: 3;
+			text-align: center;
+			.tc_bpa_join{
+				width: 100%;
+				height: 130rpx;
+				line-height: 130rpx;
+				background: #de3c2d;
+				color: #fff;
+			}
+			.tc_bpa_unjoin{
+				width: 100%;
+				height: 130rpx;
+				line-height: 130rpx;
+				background: #459653;
+				color: #fff;
+			}
+			.tc_bpa_unadult{
+				width: 100%;
+				height: 130rpx;
+				line-height: 130rpx;
+				background: #8d94a6;
+				color: #fff;
+			}
+		}
+	}
+	.tc_btnpart_normal{
+		bottom: 0!important;
+	}
+}
+</style>

@@ -6,53 +6,39 @@
 				<view class="ctc_logo">
 					<image src="../../../static/beihai_logo.png"></image>
 				</view>
-				<!--<view class="ctc_bigglass">
-					<image src="../../../static/fangdajing.png"></image>
-				</view> -->
 			</view>
 		</view>
 		<view class="body_part">
 			<view class="bp_innerbanner">
-				<!-- <swiper class="swiper" :indicator-dots="indicatorDots" :autoplay="autoplay" :interval="interval" :duration="duration">
-					<swiper-item>
-						<view class="swiper-item">
-							<image src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg"></image>
-						</view>
-					</swiper-item>
-					<swiper-item>
-						<view class="swiper-item">
-							<image src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1089874897,1268118658&fm=26&gp=0.jpg"></image>
-						</view>
-					</swiper-item>
-					<swiper-item>
-						<view class="swiper-item">
-							<image src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164095017&di=43133dc1b0a18fe9b722e2ccdd3f8d9f&imgtype=0&src=http%3A%2F%2Fdpic.tiankong.com%2Fv6%2F8b%2FQJ8174371961.jpg"></image>
-						</view>
-					</swiper-item>
-				</swiper> -->
-				<u-swiper :list="swiperList" mode="round" height="322"></u-swiper>
+				<u-swiper :list="swiperList" mode="round" height="322" @click="linkToNoticeArt"></u-swiper>
 			</view>
 			<view class="bp_titlelist">
 				<view>
-					<view class="bp_tl_imgbtn">
-						<image src="../../../static/my_course.png"></image>
-					</view>
-					<text>我的课程</text>
+					<navigator url="/personalCenter/myCourse/myCourse">
+						<view class="bp_tl_imgbtn">
+							<image src="../../../static/my_course.png"></image>
+						</view>
+						<text>我的课程</text>
+					</navigator>
 				</view>
 				<view>
-					<view class="bp_tl_imgbtn">
-						<image src="../../../static/special_training.png"></image>
-					</view>
-					<text>专题培训</text>
+					<navigator url="/trainCenter/trainList/trainList">
+						<view class="bp_tl_imgbtn">
+							<image src="../../../static/special_training.png"></image>
+						</view>
+						<text>专题培训</text>
+					</navigator>
 				</view>
 				<view>
-					<view class="bp_tl_imgbtn">
-						<image src="../../../static/ranks.png"></image>
-					</view>
-					<text>排行榜</text>
+					<navigator url="/pages/listRank/listRank">
+						<view class="bp_tl_imgbtn">
+							<image src="../../../static/ranks.png"></image>
+						</view>
+						<text>排行榜</text>
+					</navigator>
 				</view>
 				<view>
-					<navigator url="/examCenter/examList/examList">
+					<navigator url="/examCenter/examList/examList?backway=Index">
 						<view class="bp_tl_imgbtn">
 							<image src="../../../static/my_test.png"></image>
 						</view>
@@ -63,23 +49,25 @@
 			<view class="bp_noticepart">
 				<view class="bp_np_title">
 					<view class="bp_np_title_content">通知公告</view>
-					<view class="bp_np_title_loadmore">查看全部</view>
+					<view class="bp_np_title_loadmore"><navigator url="/articleCenter/noticeList/noticeList" open-type="navigate">查看全部</navigator></view>
 				</view>
 				<view class="bp_np_content">
 					<view class="bp_np_content_lefticon">
 						<view class="bp_np_cli_hot">
 							<image src="../../../static/HOT.png"></image>
 						</view>
-						<view class="bp_np_cli_cl">
-							<image src="../../../static/clock-line.png"></image>
-						</view>
-						<view class="bp_np_cli_clock">
-							<image src="../../../static/clock.png"></image>
+						<view class="bp_np_cli_nextnotice">
+							<view class="bp_np_cli_cl">
+								<image src="../../../static/clock-line.png"></image>
+							</view>
+							<view class="bp_np_cli_clock">
+								<image src="../../../static/clock.png"></image>
+							</view>
 						</view>
 					</view>
 					<view class="bp_np_content_infolist">
-						<view class="bp_np_content_item" v-for="(item, index) in noticeList" :key="index">
-							<text v-text="item.title"></text>
+						<view class="bp_np_content_item" v-for="(item, index) in noticeList" :key="index" @click="linkToNotice(item.NoticeId)">
+							<text v-text="item.NoticeTitle"></text>
 						</view>
 					</view>
 				</view>
@@ -87,7 +75,7 @@
 			<view class="bp_coursepart">
 				<view class="bp_cp_title">
 					<view class="bp_cp_title_content">课程推荐</view>
-					<view class="bp_cp_title_loadmore">更多<image src="../../../static/arrow-up.png"></image></view>
+					<view class="bp_cp_title_loadmore" @click="linkToCourse">更多<image src="../../../static/arrow-up.png"></image></view>
 				</view>
 				<view class="bp_cp_courselist">
 					<index-course-item v-for="(item, index) in courseList" :key="index" :courseItem="item"></index-course-item>
@@ -107,122 +95,132 @@
 </template>
 
 <script>
-	import indexCourseItem from '../../../components/indexCourseItem/indexCourseItem.nvue';
-	import elcBookList from '../../../components/elcBookList/elcBookList.nvue'
-	export default {
-		data() {
-			return {
-				title: 'Hello',
-				height: null,
-				interval: 2000,
-				duration: 500,
-				swiperList: [
-					{
-						image: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						title: '蒹葭苍苍，白露为霜。所谓伊人，在水一方'
-					},
-					{
-						image: 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1089874897,1268118658&fm=26&gp=0.jpg',
-						title: '溯洄从之，道阻且长。溯游从之，宛在水中央'
-					},
-					{
-						image: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164095017&di=43133dc1b0a18fe9b722e2ccdd3f8d9f&imgtype=0&src=http%3A%2F%2Fdpic.tiankong.com%2Fv6%2F8b%2FQJ8174371961.jpg',
-						title: '蒹葭萋萋，白露未晞。所谓伊人，在水之湄'
-					}
-				],
-				noticeList: [
-					{
-						title: '关于在防疫期间举办全省数字档案室建设'
-					},
-					{
-						title: '关于在疫情防控期间支持企业开展线上职业教育'
-					},
-					{
-						title: '关于推迟举办继续教育等面授培训班的通知' 
-					}
-				],
-				courseList: [
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 3.5
-					},
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 4
-					},
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 4.5
-					},
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 3.5
-					},
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 4
-					},
-					{
-						url: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1591164004599&di=bba634cf31fa42f5df1d8c2c39e8411d&imgtype=0&src=http%3A%2F%2Ffile02.16sucai.com%2Fd%2Ffile%2F2014%2F0903%2F7512230abc4724321254dcac513c6ec8.jpg',
-						courseName: '科技档案管理',
-						score: 2,
-						level: 4.5
-					}
-				],
-				elcBookList: [
-					{
-						bookImg: require('../../../static/example/example001.jpg'),
-						Title: '文书处理和档案管理'
-					},
-					{
-						bookImg: require('../../../static/example/example001.jpg'),
-						Title: '文书处理和档案管理'
-					},
-					{
-						bookImg: require('../../../static/example/example001.jpg'),
-						Title: '文书处理和档案管理'
-					},
-					{
-						bookImg: require('../../../static/example/example001.jpg'),
-						Title: '文书处理和档案管理'
-					},
-					{
-						bookImg: require('../../../static/example/example001.jpg'),
-						Title: '文书处理和档案管理'
-					}
-				]
+import indexCourseItem from '../../../components/indexCourseItem/indexCourseItem.nvue';
+import elcBookList from '../../../components/elcBookList/elcBookList.nvue';
+import { imgAddress } from '../../../common/plugin.js';
+import { GetArticleInfoList, GetNoticeInfoList, GetCourseInfoList, GetBookInfoList, GetUserInfo } from '../../../common/getData.js';
+export default {
+	data () {
+		return {
+			title: 'Hello',
+			height: null,
+			interval: 2000,
+			duration: 500,
+			swiperList: [],
+			noticeList: [],
+			courseList: [],
+			elcBookList: []
+		}
+	},
+	onLoad() {
+		var _this = this
+		uni.getSystemInfo({
+			success: function (data) {
+				_this.height=data.statusBarHeight;
 			}
-		},
-		onLoad() {
-			var _this = this
-			uni.getSystemInfo({
-				success: function (data) {
-					_this.height=data.statusBarHeight;
-				}
+		}),
+		this.CheckLoginStatus()
+	},
+	onShow () {
+		this.render()
+	},
+	methods: {
+		toEBook () {
+			uni.navigateTo({
+				url: '/eBookCenter/eBookList/eBookList'
 			})
 		},
-		methods: {
-			toEBook () {
-				uni.navigateTo({
-					url: '/eBookCenter/eBookList/eBookList'
-				})
+		linkToNotice (id) {
+			uni.navigateTo({
+				url: '/articleCenter/noticeDetail/noticeDetail?Id=' + id
+			})
+		},
+		linkToCourse () {
+			uni.reLaunch({
+				url: '/pages/tabBar/courseCenter/courseCenter'
+			})
+		},
+		linkToNoticeArt (index) {
+			let _this = this
+			uni.navigateTo({
+				url: '/articleCenter/noticeDetail/noticeDetail?Id=' + _this.swiperList[index].Id
+			})
+		},
+		async CheckLoginStatus () {
+			let msg = await GetUserInfo()
+			if (msg.Type == 1) {
+				console.log(msg)
 			}
 		},
-		components: {
-			indexCourseItem,
-			elcBookList
+		async render () {
+			let article = await GetArticleInfoList({
+				CategoryId: 1120,
+				Page: 1,
+				Rows: 3
+			})
+			if (article.Type == 1) {
+				this.swiperList = []
+				article.Data.List.forEach(item => {
+					item.ArticleImg = imgAddress(item.ArticleImg)
+					let object = {
+						image: item.ArticleImg,
+						title: item.ArticleTitle,
+						Id: item.ArticleId
+					}
+					this.swiperList.push(object)
+				})
+			}
+			let notice = await GetNoticeInfoList({
+				Page: 1,
+				Rows: 3
+			})
+			if (notice.Type === 1) {
+				this.noticeList = notice.Data.List
+				notice.Data.List.forEach(item => {
+					item.NoticeImg = imgAddress(item.NoticeImg)
+					let object = {
+						image: item.NoticeImg,
+						title: item.NoticeTitle,
+						Id: item.NoticeId
+					}
+					this.swiperList.push(object)
+				})
+			}
+			let course = await GetCourseInfoList({
+				Page: 1,
+				Rows: 6,
+				ChannelId: 48,
+				Sort: 'Sort',
+				Order: 'desc',
+				CourseType: 'All'
+			})
+			if (course.Type === 1) {
+				course.Data.List.forEach(item => {
+					item.CourseImg = item.CourseImg ? imgAddress(item.CourseImg) : require('../../../static/noCourse.png')
+				})
+				this.courseList = course.Data.List
+			}
+			let eBook = await GetBookInfoList({
+				Pages: 1,
+				Rows: 5
+			})
+			if (eBook.Type === 1) {
+				eBook.Data.List.forEach(item => {
+					if (item.BookImg != ''){
+						item.BookImg = imgAddress(item.BookImg)
+					} else {
+						item.BookImg = require('../../../static/errorBookImg.png')
+					}
+				})
+				this.elcBookList = eBook.Data.List
+			}
 		}
+	},
+	components: {
+		indexCourseItem,
+		elcBookList
 	}
+}
 </script>
 
 <style lang="scss">
@@ -236,11 +234,11 @@
 		left: 0;
 		z-index: 100;
 		.content_title_status{
-			background: #2960b2;
+			background: $brand-primary;
 		}
 		.content_title_content{
 			height: 45px;
-			background: #2960b2;
+			background: $brand-primary;
 			display: flex;
 			align-items: center;
 			.ctc_logo{
@@ -253,13 +251,6 @@
 				}
 				
 			}
-			// .ctc_bigglass{
-			// 	margin-left: 5%;
-			// 	image{
-			// 		width: 44rpx;
-			// 		height: 44rpx;
-			// 	}
-			// }
 		}
 	}
 	.body_part{
@@ -276,6 +267,9 @@
 			position: relative;
 			z-index: 99;
 		}
+		.u-swiper-indicator{
+			padding: 0!important;
+		}
 		image{
 			width: 690rpx;
 			height: 322rpx;
@@ -284,6 +278,7 @@
 			width: 690rpx;
 			padding-top: 41rpx;
 			margin: 0 auto;
+			font-size: 32rpx;
 			display: flex;
 			justify-content: space-between;
 			text-align: center;
@@ -315,6 +310,7 @@
 					height: 56rpx;
 					line-height: 56rpx;
 					border-radius: 56rpx;
+					font-size: 32rpx;
 					background: linear-gradient(to right, #5b85dc, #0099e0);
 					text-align: center;
 					color: #fff;
@@ -325,12 +321,23 @@
 				.bp_np_content_lefticon{
 					text-align: center;
 					.bp_np_cli_hot{
-						height: 60rpx;
-						margin-top: 20rpx;
+						height: 70rpx;
+						display: flex;
+						flex-direction: row;
+						justify-content: center;
+						align-items: center;
 						image{
 							width: 60rpx;
 							height: 30rpx;	
 						}
+					}
+					.bp_np_cli_nextnotice{
+						height: 140rpx;
+						padding-top: 5rpx;
+						display: flex;
+						flex-direction: column;
+						justify-content: center;
+						align-items: center;
 					}
 					.bp_np_cli_cl{
 						height: 70rpx;
@@ -341,9 +348,16 @@
 						}
 					}
 					.bp_np_cli_clock{
+						width: 100%;
+						height: 50rpx;
+						position: relative;
 						image{
 							width: 30rpx;
 							height: 30rpx;
+							margin-left: -15rpx;
+							position: absolute;
+							top: 0;
+							left: 50%;
 						}
 					}
 				}
@@ -352,6 +366,7 @@
 					.bp_np_content_item{
 						height: 70rpx;
 						line-height: 70rpx;
+						font-size: 32rpx;
 						text{
 							@include ellipsis_two(1);
 						}

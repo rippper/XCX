@@ -4,20 +4,7 @@
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-			"path": "pages/examTestPage/examTestPage",
-			"style": {
-				"navigationBarTitleText": "试题列表",
-				"navigationBarBackgroundColor": "#2960b2"
-			}
-		},
-		{
 			"path": "pages/tabBar/index/index",
-			"style": {
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/tabBar/courseCenter/courseCenter",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -25,53 +12,59 @@
 		{
 			"path": "pages/tabBar/personalCenter/personalCenter",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "个人中心",
 				"navigationBarBackgroundColor": "#2960b2"
 			}
 		},
 		{
-			
-			"path": "pages/login/login",
+			"path": "pages/tabBar/articleCenter/articleCenter",
 			"style": {
-				"navigationStyle": "custom"
+				"navigationStyle": "custom",
+				"disableScroll": true
 			}
 		},
 		{
-			"path": "pages/tabBar/articleCenter/articleCenter",
+			"path": "pages/tabBar/courseCenter/courseCenter",
 			"style": {
-				"navigationBarTitleText": "文章中心",
-				"navigationBarBackgroundColor": "#2960b2"
+				"navigationStyle": "custom",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/listRank/listRank",
+			"style": {
+				"navigationBarTitleText": "排行榜",
+				"navigationBarBackgroundColor": "#2960b2",
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationStyle": "custom",
+				"disableScroll": true
 			}
 		}
 	],
 	"subPackages": [
-		{
-			"root": "pageCourse",
-			"pages": [
-				{
-					"path": "courseCenter/courseDetail/courseDetail",
-					"style": {
-						"navigationBarTitleText": "课程详情",
-						"navigationBarBackgroundColor": "#2960b2"
-					}
-				}
-			]
-		},
-		{
+		{ // 视频分包
 			"root": "courseCenter",
 			"pages": [
 				{
 					"path": "playMp4/playMp4",
 					"style": {
 						"navigationBarTitleText": "课程详情",
-						"navigationBarBackgroundColor": "#2960b2"
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
 					}
 				},
 				{
 					"path": "playJYAicc/playJYAicc",
 					"style": {
 						"navigationBarTitleText": "课程详情",
-						"navigationBarBackgroundColor": "#2960b2"
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
 					}
 				},
 				{
@@ -83,7 +76,7 @@
 				}
 			]
 		},
-		{
+		{ // 电子书分包
 			"root": "eBookCenter",
 			"pages": [
 				{
@@ -91,10 +84,32 @@
 					"style": {
 						"navigationStyle": "custom"
 					}
+				},
+				{
+					"path": "eBookSearch/eBookSearch",
+					"style": {
+						"navigationBarTitleText": "电子书检索",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					"path": "eBookSection/eBookSection",
+					"style": {
+						"navigationBarTitleText": "电子书详情",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					"path": "eBookContent/eBookContent",
+					"style": {
+						"navigationBarTitleText": "章节详情",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
 				}
 			]
 		},
-		{
+		{ // 考试分包
 			"root": "examCenter",
 			"pages": [
 				{
@@ -109,23 +124,158 @@
 						"navigationBarTitleText": "考试搜索",
 						"navigationBarBackgroundColor": "#2960b2"
 					}
+				},
+				{
+					"path": "examTestPage/examTestPage",
+					"style": {
+						"navigationBarTitleText": "试题列表",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					 "path": "examResult/examResult",
+					 "style": {
+						"navigationStyle": "custom"
+					 }
+				},
+				{
+					"path": "examWorryPage/examWorryPage",
+					"style": {
+						"navigationBarTitleText": "错题查看",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
 				}
 			]
 		},
-		{
+		{ // 个人中心分包
 			"root": "personalCenter",
 			"pages": [
 				{
 					"path": "myScore/myScore",
 					"style": {
 						"navigationBarTitleText": "我的学时",
-						"navigationBarBackgroundColor": "#2960b2"
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
 					}
 				},
 				{
 					"path": "myCourse/myCourse",
 					"style": {
 						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "setList/setList",
+					"style": {
+						"navigationBarTitleText": "设置",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "groupSelect/groupSelect",
+					"style": {
+						"navigationStyle": "custom",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "setPassword/setPassword",
+					"style": {
+						"navigationBarTitleText": "修改密码",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "setUserInfo/setUserInfo",
+					"style": {
+						"navigationBarTitleText": "个人信息修改",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "myCourseSearch/myCourseSearch",
+					"style": {
+						"navigationBarTitleText": "我的课程检索",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "checkToLogin/checkToLogin",
+					"style": {
+						"navigationBarTitleText": "确认登录",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				}
+			]
+		},
+		{ // 文章和消息分包
+			"root": "articleCenter",
+			"pages": [
+				{
+					"path": "articleSearch/articleSearch",
+					"style": {
+						"navigationBarTitleText": "文章检索",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					"path": "articleDetail/articleDetail",
+					"style": {
+						"navigationBarTitleText": "新闻详情",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					"path": "noticeList/noticeList",
+					"style": {
+						"navigationBarTitleText": "通知列表",
+						"navigationBarBackgroundColor": "#2960b2"
+					}
+				},
+				{
+					"path": "noticeDetail/noticeDetail",
+					"style": {
+						"navigationBarTitleText": "通知详情",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				}
+			]
+		},
+		{ // 培训班分包
+			"root": "trainCenter",
+			"pages": [
+				{
+					"path": "trainList/trainList",
+					"style": {
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "trainCourse/trainCourse",
+					"style": {
+						"navigationStyle": "custom",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "trainCourseList/trainCourseList",
+					"style": {
+						"navigationBarTitleText": "课程列表",
+						"navigationBarBackgroundColor": "#2960b2",
+						"disableScroll": true
+					}
+				},
+				{
+					"path": "trainExamList/trainExamList",
+					"style": {
+						"navigationBarTitleText": "考试列表",
+						"navigationBarBackgroundColor": "#2960b2"
 					}
 				}
 			]
@@ -165,7 +315,7 @@
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},

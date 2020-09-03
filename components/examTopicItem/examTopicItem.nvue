@@ -4,11 +4,11 @@
 			【{{topicItem.ThemeType}}】{{nowTopicNum}}.{{topicItem.ThemeTitle}}({{topicItem.ThemeScore}}分)
 		</view>
 		<view class="eti_answer">
-			<jugement-select :class="{ 'show_disappear': topicItem.ThemeType !== '判断题' }" :ItemInfo="topicItem.ItemInfo" @jugementChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></jugement-select>
-			<single-select :class="{ 'show_disappear': topicItem.ThemeType !== '单选题' }" :ItemInfo="topicItem.ItemInfo" @singleChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></single-select>
-			<more-select :class="{ 'show_disappear': topicItem.ThemeType !== '多选题' }" :ItemInfo="topicItem.ItemInfo" @moreChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></more-select>
-			<input-topic :class="{ 'show_disappear': topicItem.ThemeType !== '简答题' }" @inputChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></input-topic>
-			<Completion :class="{ 'show_disappear': topicItem.ThemeType !== '填空题' }" :spaceNumber="topicItem.ThemeSpace" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum"></Completion>
+			<jugement-select :class="{ 'show_disappear': topicItem.ThemeType !== '判断题' }" :ItemInfo="topicItem.ItemInfo" @jugementChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum" :topicType="topicItem.ThemeType"></jugement-select>
+			<single-select :class="{ 'show_disappear': topicItem.ThemeType !== '单选题' }" :ItemInfo="topicItem.ItemInfo" @singleChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum" :topicType="topicItem.ThemeType"></single-select>
+			<more-select :class="{ 'show_disappear': topicItem.ThemeType !== '多选题' }" :ItemInfo="topicItem.ItemInfo" @moreChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum" :topicType="topicItem.ThemeType"></more-select>
+			<input-topic :class="{ 'show_disappear': topicItem.ThemeType !== '简答题' }" @inputChange="getAnswer" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum" :topicType="topicItem.ThemeType"></input-topic>
+			<Completion :class="{ 'show_disappear': topicItem.ThemeType !== '填空题' }" :spaceNumber="topicItem.ThemeSpace" :Answer="topicHistoryAnswer" :topicIndex="nowTopicNum" :topicType="topicItem.ThemeType" @inputChange="getAnswer"></Completion>
 		</view>
 	</view>
 </template>

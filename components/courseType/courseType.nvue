@@ -1,0 +1,159 @@
+<template>
+	<view class="courseType">
+		<view class="ct_firstfloor_item" v-for="(item, index) in courseTypeList" :key="index">
+			<view class="ctff_item" :class="{ 'ctff_item_isClick': item.isClick }" @click="firstfloorchange(item)">
+				<view class="ctff_item_word" v-text="item.Name"></view>
+				<view class="ctff_item_clickBtn" :class="{ 'ctff_item_btnType': item.Nodes.length == 0 }" @click.stop="firstflooropen(item)">
+					<view :class="{ 'ctff_item_reduce': item.isOpen, 'ctff_item_add': !item.isOpen }"></view>
+				</view>
+			</view>
+			<view 
+				class="ct_secoundfloor_item"
+				:class="{ 'ct_secoundfloor_itemopen': item.isOpen }"
+				v-for="(itemSon, indexSon) in item.Nodes"
+				:key="indexSon"
+			>
+				<view class="ctsf_item" :class="{ 'ctff_item_isClick': itemSon.isClick }"  @click="firstfloorchange(itemSon)">
+					<view class="ctsf_item_word" v-text="itemSon.Name"></view>
+					<view class="ctsf_item_clickBtn" :class="{ 'ctsf_item_btnType': itemSon.Nodes.length == 0 }" @click.stop="firstflooropen(itemSon)">
+						<view :class="{ 'ctsf_item_reduce': itemSon.isOpen, 'ctsf_item_add': !itemSon.isOpen }"></view>
+					</view>
+				</view>
+				<view
+					class="ct_thirdfloor_item"
+					:class="{ 'ct_thirdfloor_itemopen': itemSon.isOpen }"
+					v-for="(itemSons, indexSons) in itemSon.Nodes"
+					:key="indexSons"
+				>
+					<view class="cttf_item" :class="{ 'cttf_item_isClick': itemSons.isClick }" @click="firstfloorchange(itemSons)">
+						<view class="cttf_item_word" v-text="itemSons.Name"></view>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'courseType',
+	props: {
+		courseTypeList: Array
+	},
+	methods: {
+		firstflooropen (item) {
+			this.$emit('firstChange', item.Name)
+		},
+		firstfloorchange (item) {
+			this.$emit('firstClick', item)
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.courseType{
+	width: 100%;
+	.ct_firstfloor_item{
+		width: 100%;
+		max-height: 1600rpx;
+		.ctff_item{
+			width: 100%;
+			height: 80rpx;
+			padding-left: 20rpx;
+			display: flex;
+			flex-direction: row;
+			.ctff_item_word{
+				width: 80%;
+				height: 80rpx;
+				line-height: 80rpx;
+			}
+			.ctff_item_clickBtn{
+				width: 20%;
+				height: 80rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: center;
+				.ctff_item_add{
+					width: 20px;
+					height: 14px;
+					background: url(https://zyycdn.hngbwlxy.gov.cn/Main/images/tree_icons.png) no-repeat -182px -2px;
+				}
+				.ctff_item_reduce{
+					width: 20px;
+					height: 14px;
+					background: url(https://zyycdn.hngbwlxy.gov.cn/Main/images/tree_icons.png) no-repeat -182px -19px;
+				}
+			}
+			.ctff_item_btnType{
+				display: none;
+			}
+		}
+	}
+	.ctff_item_isClick{
+		background: #1C4F8A;
+		color: #fff;
+	}
+	.ct_secoundfloor_item{
+		overflow: hidden;
+		max-height: 0;
+	}
+	.ct_secoundfloor_itemopen{
+		max-height: 3200rpx;
+	}
+	.ctsf_item{
+		width: 100%;
+		height: 80rpx;
+		line-height: 80rpx;
+		padding-left: 35rpx;
+		display: flex;
+		flex-direction: row;
+		.ctsf_item_word{
+			width: 80%;
+			height: 80rpx;
+			line-height: 80rpx;
+		}
+		.ctsf_item_clickBtn{
+			width: 20%;
+			height: 80rpx;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			.ctsf_item_add{
+				width: 20px;
+				height: 14px;
+				background: url(https://zyycdn.hngbwlxy.gov.cn/Main/images/tree_icons.png) no-repeat -182px -2px;
+			}
+			.ctsf_item_reduce{
+				width: 20px;
+				height: 14px;
+				background: url(https://zyycdn.hngbwlxy.gov.cn/Main/images/tree_icons.png) no-repeat -182px -19px;
+			}
+		}
+		.ctsf_item_btnType{
+			display: none;
+		}
+	}
+	.ct_thirdfloor_item{
+		overflow: hidden;
+		max-height: 0;
+		.cttf_item{
+			width: 100%;
+			height: 80rpx;
+			line-height: 80rpx;
+			padding-left: 50rpx;
+			display: flex;
+			flex-direction: row;
+		}
+		.cttf_item_isClick{
+			background: #1C4F8A;
+			color: #fff;
+		}
+	}
+	.ct_thirdfloor_itemopen{
+		max-height: 3200rpx;
+	}
+}
+</style>

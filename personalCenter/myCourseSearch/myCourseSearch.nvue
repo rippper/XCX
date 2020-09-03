@@ -1,0 +1,191 @@
+<template>
+	<view class="myCourseSearch">
+		<view class="mcs_searchpart">
+			<u-search placeholder="请输入课程名称" v-model="Keyword" :clearabled="true" @search="searchCourse" @custom="searchCourse"></u-search>
+		</view>
+		<search-history :class="{ 'history_disappear': searched }" :historyList="myCourseHistory" @makeSelect="searchCourse" @delete="deleteHistory"></search-history>
+		<scroll-view class="mcs_bookresult" :class="{ 'mycourseresult_disappear': !searched, 'mcs_noDataBg': noDataBg }" scroll-y @scrolltolower="GetUserCourseInfoList">
+			<train-course-item v-for="item in courseList" :key="item.CourseId" :courseInfo="item"></train-course-item>
+			<u-loadmore :class="{ 'msc_noData': noDataBg }" :status="status"/>
+		</scroll-view>
+		<u-toast ref="uToast" />
+	</view>
+</template>
+
+<script>
+import searchHistory from '../../components/searchHistory/searchHistory.nvue';
+import trainCourseItem from '../../components/trainCourseItem/trainCourseItem.nvue'
+import { imgAddress } from '../../common/plugin.js'
+import { GetUserCourseInfoList } from '../../common/getData.js';
+export default {
+	name: 'myCourseSearch',
+	data () {
+		return {
+			Keyword: '',
+			myCourseHistory: '',
+			courseList: [],
+			Page: 1,
+			Rows: 10,
+			searched: false,
+			noDataBg: false,
+			inTheEnd: false,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onShow () {
+		this.getHistory()
+	},
+	methods: {
+		searchCourse (value) {
+			if (value == '') {
+				this.$refs.uToast.show({
+					title: '请输入课程名称',
+					type: 'warning',
+					icon: false,
+					position: 'bottom'
+				})
+				return false
+			}
+			this.Page = 1
+			this.status = 'loading'
+			this.noDataBg = false
+			this.inTheEnd = false
+			this.totalCount = 0
+			this.courseList = []
+			this.historyEdit(value)
+		},
+		historyEdit (value) {
+			this.Keyword = value
+			let num = ''
+			let repeat = this.myCourseHistory.some((item, index) => {
+				if (item == value) {
+					num = index
+					return true
+				}
+			})
+			if (repeat) {
+				this.myCourseHistory.splice(num, 1)
+				this.myCourseHistory.unshift(value)
+				uni.setStorageSync('myCourseHistory', this.myCourseHistory)
+				this.GetUserCourseInfoList()
+				return false
+			}
+			if (this.myCourseHistory.length > 12) {
+				this.myCourseHistory.pop()
+				this.myCourseHistory.unshift(value)
+				uni.setStorageSync('myCourseHistory', this.myCourseHistory)
+			} else {
+				this.myCourseHistory.unshift(value)
+				uni.setStorageSync('myCourseHistory', this.myCourseHistory)
+			}
+			this.GetUserCourseInfoList()
+		},
+		getHistory () {
+			let arr = uni.getStorageSync('myCourseHistory')
+			Array.isArray(arr) ? this.myCourseHistory = arr : this.myCourseHistory = []
+		},
+		deleteHistory () {
+			uni.removeStorageSync('myCourseHistory')
+			this.myCourseHistory = []
+		},
+		async GetUserCourseInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetUserCourseInfoList({
+				Keyword: this.Keyword,
+				Finish: 2,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.searched = true
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					item.CourseImg = imgAddress(item.CourseImg)
+				})
+				this.courseList = [...this.courseList, ...msg.Data.List]
+				if (this.courseList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			}
+		}
+	},
+	components: {
+		searchHistory,
+		trainCourseItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.myCourseSearch{
+	height: 100vh;
+	.mcs_searchpart{
+		width: 100%;
+		padding: 20rpx;
+		background: #fff;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	.searchHistory{
+		margin-top: 120rpx;
+	}
+	.history_disappear{
+		display: none;
+	}
+	.mycourseresult_disappear{
+		display: none;
+	}
+	.msc_noData{
+		display: none;
+	}
+	.u-search{
+		flex-direction: row;
+	}
+	.u-content{
+		flex-direction: row;
+	}
+	.mcs_bookresult{
+		width: 100%;
+		height: 100%;
+		padding: 134rpx 30rpx 0;
+	}
+	.u-progress{
+		width: 100%;
+		flex-direction: row;
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		background-color: transparent!important;
+	}
+	.u-more-text{
+		background-color: #e8e8e8!important;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.mcs_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

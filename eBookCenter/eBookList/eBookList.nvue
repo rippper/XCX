@@ -1,45 +1,100 @@
 <template>
 	<view class="eBookList">
-		<header-fix :height="height" title="电子书列表">
+		<header-fix title="电子书列表" :height="height">
 			<view class="ebl_btn">
-				<view class="ebl_btn_type" @click="goBack">
-					<image src="../../static/list.png"></image>
+				<view class="ebl_btn_goback" @click="goBack">
+					<image src="../../static/fanhui.png"></image>
 				</view>
 				<view class="ebl_btn_centerline"></view>
-				<view class="ebl_btn_search" @click="courseSearch">
+				<view class="ebl_btn_search" @click="goSearch">
 					<image src="../../static/fangdajing.png"></image>
 				</view>
 			</view>
 		</header-fix>
+		<scroll-view scroll-y class="ebl_bookList" :class="{ 'ebl_list_nodatabg': noDataBg }" :style="'padding-top:' + (height + 44) + 'px'">
+			<view class="ebl_bookList_inner">
+				<e-book-page-item v-for="(item, index) in eBookList" :key="index" :eBookInfo="item"></e-book-page-item>
+			</view>
+			<u-loadmore :class="{ 'ebl_noData': noDataBg }" :status="status"/>
+		</scroll-view>
 	</view>
 </template>
 
 <script>
-import headerFix from '../../components/headerFix/headerFix.nvue'
-
+import headerFix from '../../components/headerFix/headerFix.nvue';
+import eBookPageItem from '../../components/eBookPageItem/eBookPageItem.nvue';
+import { GetBookInfoList } from '../../common/getData.js';
+import { imgAddress } from '../../common/plugin.js';
 export default {
-	name: 'eBookList',
-	onLoad () {
-		wx.getSystemInfo({
-			success: ( res ) => { // 用这种方法调用，this指向Page
-				this.winH = res.windowHeight
-				this.height = res.statusBarHeight
-			}
-		})
-	},
+	name: 'eBookCenter',
 	data () {
 		return {
 			winH: '',
-			height: ''
+			height: '',
+			eBookList: [],
+			totalCount: 0,
+			noDataBg: '',
+			Pages: 1,
+			Rows: 12,
+			inTheEnd: false,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
 		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH= res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.GetBookInfoList()
 	},
 	methods: {
 		goBack () {
 			uni.navigateBack()
+		},
+		loadMore () {
+			this.eBookList = [...this.eBookList, ...this.eBookList]
+		},
+		goSearch () {
+			uni.navigateTo({
+				url: '/eBookCenter/eBookSearch/eBookSearch'
+			})
+		},
+		async GetBookInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetBookInfoList({
+				Pages: this.Pages,
+				Rows: this.Rows
+			})
+			if (msg.Type == 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.map(item => {
+					item.BookImg = item.BookImg ? imgAddress(item.BookImg) : require('../../static/errorBookImg.png')
+					item.CreateTime = ''
+				})
+				this.eBookList = [...this.eBookList, ...msg.Data.List]
+				if (this.eBookList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+			}
+			this.Pages += 1
 		}
 	},
 	components: {
-		headerFix
+		headerFix,
+		eBookPageItem
 	}
 }
 </script>
@@ -48,7 +103,7 @@ export default {
 @import '../../style/mixin.scss';
 .eBookList{
 	width: 100%;
-	overflow: hidden;
+	height: 100vh;
 	background: #fff;
 	.ebl_btn{
 		width: 81px;
@@ -67,15 +122,15 @@ export default {
 		flex-direction: row;
 		justify-content: space-between;
 		align-items: center;
-		.ebl_btn_type{
+		.ebl_btn_goback{
 			width: 40px;
 			height: 30px;
 			display: flex;
 			justify-content: space-around;
 			align-items: center;
 			image{
-				width:16px;
-				height: 16px;
+				width: 13px;
+				height: 13px;
 			}
 		}
 		.ebl_btn_centerline{
@@ -94,6 +149,35 @@ export default {
 				height: 16px;
 			}
 		}
+	}
+	.ebl_bookList{
+		width: 100%;
+		height: 100%;
+		.ebl_bookList_inner{
+			width: 690rpx;
+			margin: 0 auto;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+		}
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.ebl_noData{
+		display: none;
+	}
+	.ebl_list_nodatabg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
 	}
 }
 </style>

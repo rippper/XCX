@@ -8,7 +8,7 @@
  // 全局/品牌色
  /*$brand-primary: #ec4747;
  $brand-primary-tap: #E74545;*/
- $brand-primary: #d61101;
+ $brand-primary: #2960b2;
  $brand-primary-tap: #fe5b3b;
  $brand-success: #01dd99;
  $brand-info: #26a2ff;
@@ -216,7 +216,7 @@
  }
  
  @mixin setBackground ($address) {
-	 background: url('http://test75.jy365.net/Content/Wcheat/' + $address) no-repeat;
+	 background: url('https://www.bhgbzx.gov.cn/Content/Wcheat/' + $address) no-repeat;
  }
  
  //base边框

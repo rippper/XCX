@@ -1,0 +1,198 @@
+<template>
+	<view class="examResult" :style="'margin-top:' + (height + 45) + 'px'">
+		<header-fix title="考试结果" :height="height"></header-fix>
+		<view class="er_toppart">
+			<view class="er_toppart_passtype" v-if="scoreType">
+				<image src="../static/xiaolian.png"></image>
+				<text>恭喜您！</text>
+			</view>
+			<view class="er_toppart_passtype" v-else>
+				<image src="../static/kulian.png"></image>
+				<text>很遗憾！</text>
+			</view>
+			<view class="er_toppart_myscore">
+				<text>您的得分：</text><text v-text="Score"></text>
+			</view>
+		</view>
+		<view class="er_middlepart">
+			<view class="er_middlepart_line er_middlepart_underline">
+				<view>用时:</view>
+				<view v-text="Time"></view>
+			</view>
+			<view class="er_middlepart_line er_middlepart_underline">
+				<view>总题数:</view>
+				<view v-text="TopicNum"></view>
+			</view>
+			<view class="er_middlepart_line er_middlepart_underline">
+				<view>正确:</view>
+				<view v-text="RightNum"></view>
+			</view>
+			<view class="er_middlepart_line">
+				<view>错误:</view>
+				<view v-text="Worry ? Worry : 0"></view>
+			</view>
+		</view>
+		<view class="er_bottompart">
+			<view class="er_bottompart_btn" @click="goBack">返回</view>
+			<view class="er_bottompart_btn" v-if="examDetail != 0" @click="watchWorry">查看错题</view>
+			<view class="er_bottompart_btn" @click="moreonce" v-if="!noTimes">再考一次</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import headerFix from '../../components/headerFix/headerFix.nvue';
+
+export default {
+	name: 'examResult',
+	data () {
+		return {
+			height: '',
+			winH: '',
+			examId: '',
+			examDetail: '',
+			scoreType: true,
+			Score: '',
+			Time: '',
+			TopicNum: '',
+			RightNum: '',
+			Worry: '',
+			noTimes: false,
+			fromType: ''
+		}
+	},
+	onLoad (option) {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.setType(option)
+	},
+	methods: {
+		goBack () {
+			uni.removeStorageSync('testBreak' + this.examId)
+			console.log(this.fromType)
+			if (this.fromType == 'train') {
+				uni.reLaunch({
+					url: '/trainCenter/trainList/trainList'
+				})
+			} else {
+				uni.reLaunch({
+					url: '/examCenter/examList/examList'
+				})
+			}
+		},
+		moreonce () {
+			uni.navigateTo({
+				url: '/examCenter/examTestPage/examTestPage?Id=' + this.examId + '&fromType=train'
+			})
+		},
+		watchWorry () {
+			uni.navigateTo({
+				url: '/examCenter/examWorryPage/examWorryPage?Id=' + this.examId + '&Score=' + this.Score + '&rightTopic=' + this.RightNum + '&passType=' + this.scoreType
+			})
+		},
+		setType (option) {
+			this.scoreType = option.hp == 'false' ? false : true
+			this.Score = option.sc + '分'
+			this.TopicNum = option.tc
+			this.RightNum = option.rc
+			this.Worry = option.tc - option.rc
+			this.examDetail = option.dID
+			this.examId = option.eID
+			this.fromType = option.fromType
+			if (option.et == 1) {
+				this.noTimes = true
+			}
+			if (option.ut == 0) {
+				this.Time = '不限时'
+			} else {
+				this.Time = this.timeFillter(option.ut)
+			}
+		},
+		timeFillter (time) {
+			let min = Math.floor(time / 60)
+			let sec = time % 60
+			if (min < 10) {
+				min = '0' + min
+			}
+			if (sec < 10) {
+				sec = '0' + sec
+			}
+			return min + ':' + sec
+		}
+	},
+	components: {
+		headerFix
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examResult{
+	.er_toppart{
+		height: 360rpx;
+		background: #fff;
+		.er_toppart_passtype{
+			padding-top: 120rpx;
+			padding-bottom: 50rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			font-size: 36rpx;
+			image{
+				width: 48rpx;
+				height: 48rpx;
+				margin-right: 10rpx;
+			}
+		}
+		.er_toppart_myscore{
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			font-size: 40rpx;
+		}
+	}
+	.er_middlepart{
+		margin-top: 30rpx;
+		background: #fff;
+		.er_middlepart_line{
+			width: 690rpx;
+			height: 82rpx;
+			margin: 0 auto;
+			font-size: 32rpx;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.er_middlepart_underline{
+			border-bottom: 1rpx solid #e8e8e8;
+		}
+	}
+	.er_bottompart{
+		width: 690rpx;
+		margin: 40rpx auto 0;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		align-items: center;
+		.er_bottompart_btn{
+			width: 200rpx;
+			height: 80rpx;
+			line-height: 80rpx;
+			border-radius: 20rpx;
+			text-align: center;
+			background: $brand-primary;
+			color: #fff;
+			font-size: 32rpx;
+		}
+	}
+}
+</style>

@@ -5,19 +5,19 @@
 				<view class="ms_scoreItem_title">
 					用户名
 				</view>
-				<view class="ms_scoreItem_content" v-text="userName"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.Username"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					单位
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.GroupName"></view>
 			</view>
 			<view class="ms_scoreItem ms_scoreItemlast">
 				<view class="ms_scoreItem_title">
 					用户职务
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.UserZW"></view>
 			</view>
 		</view>
 		<view class="pcms_firstpart">
@@ -25,31 +25,31 @@
 				<view class="ms_scoreItem_title">
 					必修课程学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.RequiredCredit"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					选修课程学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.ElectiveCredit"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					考试获得学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.ExamCredit"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					培训获得学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.TrainningCredit"></view>
 			</view>
 			<view class="ms_scoreItem ms_scoreItemlast">
 				<view class="ms_scoreItem_title">
 					获得总学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.TotalCredit"></view>
 			</view>
 		</view>
 		<view class="pcms_lastpart">
@@ -57,39 +57,51 @@
 				<view class="ms_scoreItem_title">
 					要求必修学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.NeedRequiredCredit"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					要求总学时
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.NeedCredit"></view>
 			</view>
 			<view class="ms_scoreItem">
 				<view class="ms_scoreItem_title">
 					考核结果
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.PassFlag?'通过':'未通过'"></view>
 			</view>
 			<view class="ms_scoreItem ms_scoreItemlast">
 				<view class="ms_scoreItem_title">
 					您的学时排名
 				</view>
-				<view class="ms_scoreItem_content"></view>
+				<view class="ms_scoreItem_content" v-text="userInfo.ScoreRank"></view>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
-	export default {
-		name: 'myScore',
-		data () {
-			return {
-				userName: 'zyb'
+import { GetUserInfo } from '../../common/getData.js';
+export default {
+	name: 'myScore',
+	data () {
+		return {
+			userInfo: ''
+		}
+	},
+	onShow () {
+		this.GetUserInfo()
+	},
+	methods: {
+		async GetUserInfo () {
+			let msg = await GetUserInfo()
+			if (msg.Type == 1) {
+				this.userInfo = msg.Data
 			}
 		}
 	}
+}
 </script>
 
 <style lang="scss">

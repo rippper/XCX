@@ -1,0 +1,52 @@
+<template>
+	<view class="reviewTopicItem">
+		<view class="rti_title">
+			<text>【{{ itemInfo.Question.Type }}】{{ topicIndex+1 }}.{{ itemInfo.Question.Name }}(题目分数:{{itemInfo.Question.Score}},您的得分:{{ itemInfo.UserScore }},您的选项: {{itemInfo.UserAnswer}},正确选项: {{itemInfo.Question.Answer ? itemInfo.Question.Answer : '未公布' }})</text>
+		</view>
+		<view class="rti_titleItem">
+			<jugement-select :class="{ 'topicDisappear': itemInfo.Question.Type != '判断题' }" :Type="'worry'" :reviewAnswerList="itemInfo.Question.QuestionsItems" :rightAnswer="itemInfo.Question.Answer" :userAnswer="itemInfo.UserAnswer"></jugement-select>
+			<single-select :class="{ 'topicDisappear': itemInfo.Question.Type != '单选题' }" :Type="'worry'" :reviewAnswerList="itemInfo.Question.QuestionsItems" :rightAnswer="itemInfo.Question.Answer" :userAnswer="itemInfo.UserAnswer"></single-select>
+			<more-select :class="{ 'topicDisappear': itemInfo.Question.Type != '多选题' }" :Type="'worry'" :reviewAnswerList="itemInfo.Question.QuestionsItems" :rightAnswer="itemInfo.Question.Answer" :userAnswer="itemInfo.UserAnswer" :topicIndex="topicIndex"></more-select>
+		</view>
+	</view>
+</template>
+
+<script>
+import jugementSelect from '../jugementSelect/jugementSelect.nvue';
+import singleSelect from '../singleSelect/singleSelect.nvue';
+import moreSelect from '../moreSelect/moreSelect.nvue';
+export default {
+	name: 'reviewTopicItem',
+	data () {
+		return {
+			
+		}
+	},
+	props: {
+		itemInfo: Object,
+		topicIndex: Number
+	},
+	methods: {
+		
+	},
+	components: {
+		jugementSelect,
+		singleSelect,
+		moreSelect
+	}
+}
+</script>
+
+<style lang="scss">
+.reviewTopicItem{
+	width: 100%;
+	height: 100%;
+	padding: 0 30rpx;
+	.rti_title{
+		padding-top: 20rpx;
+	}
+	.topicDisappear{
+		display: none;
+	}
+}
+</style>

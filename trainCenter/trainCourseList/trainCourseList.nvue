@@ -1,0 +1,110 @@
+<template>
+	<view class="trainCourseList">
+		<scroll-view class="tcl_list" scroll-y :class="{ 'tcl_noDataBg': noDataBg }" @scrolltolower="GetClassCourseInfoList">
+			<train-course-item v-for="(item, index) in courseList" :key="index" :courseInfo="item"></train-course-item>
+			<u-loadmore :class="{ 'tcl_noData': noDataBg }" :status="status"/>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+import { GetClassCourseInfoList } from '../../common/getData.js';
+import trainCourseItem from '../../components/trainCourseItem/trainCourseItem.nvue';
+import { imgAddress } from '../../common/plugin.js';
+export default {
+	name: 'trainCourseList',
+	data () {
+		return {
+			trainId: '',
+			courseList: [],
+			totalCount: 0,
+			Page: 1,
+			Rows: 10,
+			noDataBg: '',
+			inTheEnd: false,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onLoad (option) {
+		this.trainId = option.Id
+		this.GetClassCourseInfoList()
+	},
+	methods: {
+		async GetClassCourseInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetClassCourseInfoList({
+				TrainingId: this.trainId,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (this.totalCount == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					item.CourseImg = imgAddress(item.CourseImg)
+				})
+				this.courseList = [...this.courseList, ...msg.Data.List]
+				if (this.courseList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			}
+		}
+	},
+	components: {
+		trainCourseItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.trainCourseList{
+	width: 100%;
+	height: 100vh;
+	u-line-progress{
+		display: flex;
+		justify-content: center;
+	}
+	.u-progress{
+		width: 100%;
+		flex-direction: row;
+	}
+	.tcl_list{
+		height: 100%;
+		padding-top: 30rpx; 
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		background-color: transparent!important;
+	}
+	.u-more-text{
+		background-color: #e8e8e8!important;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.tcl_noData{
+		display: none;
+	}
+	.tcl_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

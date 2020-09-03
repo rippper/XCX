@@ -4,6 +4,7 @@
 			<video
 				:src="currentCoursePackage.Mp4"
 				controls
+				:autoplay="isAutoplay"
 				:show-progress="progressType"
 				:enable-progress-gesture="false"
 				:custom-cache="false"
@@ -66,7 +67,7 @@
 					</swiper-item>
 					<swiper-item class="swiper-item">
 						<scroll-view scroll-y class="swiper-item-two">
-							<view class="jya_vit_courseitem" v-for="(item, index) in contextList" :key="index" @click="changePackage(item)">
+							<view class="jya_vit_courseitem" v-for="(item, index) in contextList" :key="index" @click="changePackage(item, index)">
 								<view class="jya_vit_courseName" :class="{ 'jya_vit_courseIsSelect': item.isSelect}" v-text="item.NodeName"></view>
 								<view class="jya_vit_courseType">
 									<text v-show="item.Status === 'UnFinish' || item.Status === ''">未完成</text>
@@ -78,6 +79,7 @@
 				</swiper>
 			</view>
 		</view>
+		<u-modal v-model="show" :content="content" @confirm="checkNettype" show-cancel-button="true"></u-modal>
 	</view>
 </template>
 
@@ -96,7 +98,7 @@ export default {
 			}],
 			current: 0,
 			swiperCurrent: 0,
-			courseName: '领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范领导干部廉洁从业风险防范',
+			courseName: '',
 			currentCoursePackage: '',  // 当前课程包内容
 			nowprogress: 0, // 当前段落课程进度
 			currentTime: 0, // 当前课程进度时间
@@ -108,11 +110,24 @@ export default {
 			Score: '0.5',
 			Introduction: '这是介绍',
 			contextList: [],
-			hasLoad: false // 检测是否调取过课程数据加载接口
+			hasLoad: false, // 检测是否调取过课程数据加载接口
+			isAutoplay: false,
+			show: false,
+			content: '当前并非处于wifi网络连接状态，是否继续播放视频？'
 		}
 	},
 	onLoad (option) {
+		let _this = this
 		this.courseId = option.id
+		wx.getNetworkType({
+			success (res) {
+			    const networkType = res.networkType
+				console.log(networkType)
+				if (networkType != 'wifi') {
+					_this.show = true
+				}
+			}
+		})
 	},
 	onShow () {
 		if (!this.hasLoad) {
@@ -146,7 +161,11 @@ export default {
 				this.SyncUserStudyDataXCX(this.currentCoursePackage.NodeId, this.currentTime, 'C')
 			}
 		},
-		changePackage (item) {
+		changePackage (item, indexs) {
+			this.contextList.forEach((item,index) => {
+				this.$set(this.contextList[index], 'isSelect', false)
+			})
+			this.$set(this.contextList[indexs], 'isSelect', true)
 			this.currentCoursePackage = item
 			this.nowprogress = 0
 			this.currentTime = 0
@@ -156,7 +175,10 @@ export default {
 			} else {
 				this.progressType = false
 			}
-			console.log()
+		},
+		checkNettype () {
+			this.isAutoplay = true
+			this.show = false
 		},
 		async GetCourseDetail () {
 			let msg = await GetCourseDetail({
@@ -185,6 +207,8 @@ export default {
 					} else if (this.contextList.length == index + 1 && item.Status === 'C') {
 						let obj = simpleCopy(this.contextList[0])
 						obj.isSelect = true
+						this.progressType = true
+						this.nowprogress = 100
 						this.$set(this.contextList, 0, obj)
 						return this.currentCoursePackage = this.contextList[0]
 					}
@@ -202,7 +226,6 @@ export default {
 			if (msg.Type === 1) {
 				if (msg.Data.pass) {
 					this.allProgress = Math.floor(msg.Data.CurrentProgress)
-					this.
 					this.contextList.forEach(item => {
 						if (item.NodeId == NodeId) {
 							item.Status = 'C'
@@ -296,12 +319,12 @@ export default {
 					align-items: center;
 				}
 				.jya_vc_vi_progressname{
-					width: 30%;
+					width: 35%;
 					font-size: 32rpx;
 					margin-right: 15rpx;
 				}
 				.jya_vc_vi_progressline{
-					width: 70%;
+					width: 65%;
 					position: relative;
 					bottom: 6rpx;
 				}
@@ -317,12 +340,16 @@ export default {
 					flex-direction: row;
 					justify-content: space-between;
 					.jvvm_left{
+						width: 50%;
 						.jvvm_left_courseType{
+							width: 100%;
 							height: 50rpx;
+							line-height: 50rpx;
 							display: flex;
 							flex-direction: row;
 							align-items: center;
 							font-size: 32rpx;
+							@include ellipsis_two(1);
 						}
 						.jvvm_left_time{
 							height: 50rpx;
@@ -365,7 +392,7 @@ export default {
 							width: 8rpx;
 							height: 26rpx;
 							margin-right: 10rpx;
-							background: #2960b2;
+							background: $brand-primary;
 							display: block;
 						}
 					}
@@ -406,6 +433,9 @@ export default {
 				}
 			}
 		}
+	}
+	.u-model-footer{
+		flex-direction: row;
 	}
 }
 </style>

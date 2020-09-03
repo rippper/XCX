@@ -1,0 +1,51 @@
+<template>
+	<view class="noticeItem" @click="linkToDetail">
+		<view class="ni_Icon">
+			<image src="../../static/noticeIcon.png"></image>
+		</view>
+		<view class="ni_title" v-text="noticeInfo.NoticeTitle"></view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'noticeItem',
+	props: {
+		noticeInfo: Object
+	},
+	methods: {
+		linkToDetail () {
+			uni.navigateTo({
+				url: '/articleCenter/noticeDetail/noticeDetail?Id=' + this.noticeInfo.NoticeId
+			})
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.noticeItem{
+	height: 100rpx;
+	padding: 0 30rpx 0 20rpx;
+	background: #fff;
+	display: flex;
+	flex-direction: row;
+	.ni_Icon{
+		width: 70rpx;
+		height: 100rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		image{
+			width: 20rpx;
+			height: 20rpx;
+		}
+	}
+	.ni_title{
+		width: 630rpx;
+		line-height: 100rpx;
+		@include ellipsis_two(1);
+	}
+}
+</style>

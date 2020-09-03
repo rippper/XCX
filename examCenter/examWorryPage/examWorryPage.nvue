@@ -1,0 +1,142 @@
+<template>
+	<view class="examWorryPage">
+		<view class="ewp_testResult">
+			得分:{{Score}},正确题目数:{{rightNum}},{{scoreType === 'false' ? '未通过' : '通过'}}
+		</view>
+		<view class="ewp_examcontent">
+			<review-topic-item :itemInfo="topicList[currentIndex]" :topicIndex="currentIndex"></review-topic-item>
+		</view>
+		<view class="ewp_exambtn">
+			<view class="ewp_exam_prebtn">
+				<view class="ewp_epb_botton" @click="preTopic" :class="{ 'btnDisappear': currentIndex == 0 }">
+					上一题
+				</view>
+			</view>
+			<view class="ewp_exam_topicnumber">{{ currentIndex + 1 }} / {{ topicList.length }}</view>
+			<view class="ewp_exam_nextbtn">
+				<view class="ewp_epb_botton" @click="nextTopic" :class="{ 'btnDisappear': currentIndex + 1 == topicList.length }">
+					下一题
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import reviewTopicItem from '../../components/reviewTopicItem/reviewTopicItem.nvue';
+export default {
+	name: 'examWorryPage',
+	data () {
+		return {
+			examId: '',
+			rightNum: '',
+			scoreType: '',
+			Score: '',
+			topicList: '',
+			currentIndex: 0
+		}
+	},
+	onLoad (option) {
+		this.examId = option.Id
+		this.Score = option.Score
+		this.rightNum = option.rightTopic
+		this.scoreType = option.passType
+		this.getRecord()
+	},
+	methods: {
+		getRecord () {
+			let arr = JSON.parse(uni.getStorageSync('weChat-examList-' + this.examId))
+			arr.forEach(item => {
+				if (item.Question.Type == "Judge") {
+					item.Question.Type = '判断题'
+				} else if (item.Question.Type == "Single") {
+					item.Question.Type = '单选题'
+				} else if (item.Question.Type == "More") {
+					item.Question.Type = '多选题'
+				}
+			})
+			this.topicList = arr
+			console.log(this.topicList)
+		},
+		nextTopic () {
+			this.currentIndex += 1
+		},
+		preTopic () {
+			this.currentIndex -= 1
+		}
+	},
+	components: {
+		reviewTopicItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examWorryPage{
+	width: 100%;
+	height: 100vh;
+	position: relative;
+	.ewp_testResult{
+		width: 100%;
+		height: 60rpx;
+		line-height: 60rpx;
+		border-bottom: 1rpx solid #e8e8e8;
+		text-align: center;
+		font-size: 32rpx;
+		position: fixed;
+		top: 0;
+		left: 0;
+		background: #fff;
+		z-index: 99;
+	}
+	.ewp_examcontent{
+		width: 100%;
+		height: 100%;
+		padding: 60rpx 0 125rpx;
+		background: #fff;
+	}
+	.ewp_exambtn{
+		width: 100%;
+		height: 125rpx;
+		line-height: 125rpx;
+		background: #fff;
+		display: flex;
+		flex-direction: row;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		.ewp_exam_prebtn{
+			flex: 1;
+			position: relative;
+		}
+		.ewp_exam_topicnumber{
+			flex: 1;
+			text-align: center;
+		}
+		.ewp_exam_nextbtn{
+			flex: 1;
+			position: relative;
+		}
+		.ewp_epb_botton{
+			width: 160rpx;
+			height: 70rpx;
+			line-height: 70rpx;
+			text-align: center;
+			margin: auto;
+			border-radius: 10rpx;
+			font-size: 32rpx;
+			color: #fff;
+			background: $brand-primary;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+	}
+	.btnDisappear{
+		display: none;
+	}
+}
+</style>

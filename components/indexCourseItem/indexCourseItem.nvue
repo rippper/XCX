@@ -1,53 +1,82 @@
 <template>
-	<view class="indexCourseItem">
+	<view class="indexCourseItem"  @click="linkToCourseDetail">
 		<view class="ici_courseImg">
-			<image :src="courseItem.url"></image>
+			<image :src="courseItem.CourseImg"></image>
 		</view>
 		<view class="ici_courseInfo">
-			<text class="ici_coursetitle" v-text="courseItem.courseName"></text>
-			<text class="ici_coursescore">学时: {{courseItem.score}} 学时</text>
-			<star-level :score="courseItem.level * 2"></star-level>
+			<text class="ici_coursetitle" v-text="courseItem.CourseName"></text>
+			<view class="ici_coursescore">
+				<text>学时:</text>
+				<text v-text="courseItem.Credit"></text>
+				<text>学时</text>
+			</view>
+			<view class="ici_courseteacher">
+				<text>讲师:</text><text v-text="courseItem.TeacherName"></text>
+			</view>
 		</view>
 	</view>
 </template>
 
 <script>
-import { starLevel } from '../starLevel/starLevel.nvue'
-	export default {
-		name: 'indexCourseItem',
-		props: {
-			courseItem: Object
-		},
-		components: {
-			starLevel
+export default {
+	name: 'indexCourseItem',
+	props: {
+		courseItem: Object
+	},
+	methods: {
+		linkToCourseDetail () {
+			// console.log(this.courseItem)
+			if (this.courseItem.Type === "ThreeScreenCourse") {
+				uni.navigateTo({
+					url: '/courseCenter/playJYAicc/playJYAicc?id=' + this.courseItem.CourseId
+				})
+			} else if (this.courseItem.Type === "SingleCourse") {
+				uni.navigateTo({
+					url: '/courseCenter/playMp4/playMp4?id=' + this.courseItem.CourseId
+				})
+			} else {
+				// console.log(type)
+			}
 		}
 	}
+}
 </script>
 
 <style lang="scss">
+@import '../../style/mixin.scss';
 .indexCourseItem{
 	width: 320rpx;
 	margin-right: 19rpx;
 	padding-bottom: 20rpx;
-	& :last-child{
+	&:last-of-type{
 		margin-right: 30rpx;
 	}
 	.ici_courseImg{
 		width: 320rpx;
-		height: 212rpx;	
+		height: 200rpx;	
 		image{
 			width: 320rpx;
-			height: 212rpx;	
+			height: 200rpx;	
 			border-radius: 15rpx;
 		}
 	}
 	.ici_courseInfo{
 		margin-top: 25rpx;
 		.ici_coursetitle{
-			font-weight: bold;
+			line-height: 40rpx;
+			font-size: 32rpx;
+			@include ellipsis_two;
 		}
 		.ici_coursescore{
-			margin-bottom: 17rpx;
+			margin: 10rpx 0 5rpx;
+			font-size: 22rpx;
+			color: #b4b4b4;
+			display: flex;
+			flex-direction: row;
+		}
+		.ici_courseteacher{
+			display: flex;
+			flex-direction: row;
 			font-size: 22rpx;
 			color: #b4b4b4;
 		}

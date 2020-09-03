@@ -1,0 +1,66 @@
+<template>
+	<scroll-view  class="noticeDetail" scroll-y>
+		<view class="noticeDetail_inner">
+			<view class="nd_title">
+				<view class="nd_title_content" v-text="noticeInfo.Name"></view>
+				<view class="nd_title_info">发布时间: {{ noticeInfo.CreatedDate }}</view>
+			</view>
+			<view class="nd_content" v-html="noticeInfo.Content"></view>
+		</view>
+	</scroll-view >
+</template>
+
+<script>
+import { NoticeDetail } from '../../common/getData.js';
+import { formatRichText } from '../../common/plugin.js'
+export default {
+	name: 'noticeDetail',
+	data () {
+		return {
+			noticeId: '',
+			noticeInfo: ''
+		}
+	},
+	onLoad (option) {
+		this.noticeId = option.Id
+		this.NoticeDetail()
+	},
+	methods: {
+		async NoticeDetail () {
+			let msg = await NoticeDetail({
+				Id: this.noticeId
+			})
+			if (msg.Type == 1) {
+				msg.Data.CreatedDate = msg.Data.CreatedDate.substr(0, 10)
+				msg.Data.Content = formatRichText(msg.Data.Content)
+				this.noticeInfo = msg.Data
+			}
+			// console.log(msg)
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+.noticeDetail{
+	height: 100vh;
+	background: #fff;
+	.noticeDetail_inner{
+		width: 100%;
+		padding: 30rpx 30rpx 0;
+	}
+	.nd_title_content{
+		margin-bottom: 30rpx;
+		font-size: 40rpx;
+		font-weight: bold;
+		text-align: center;
+	}
+	.nd_title_info{
+		padding-bottom: 5rpx;
+		margin-bottom: 15rpx;
+		border-bottom: 1rpx solid #e8e8e8;
+		font-size: 32rpx;
+		text-align: center;
+	}
+}
+</style>

@@ -5,8 +5,8 @@
 				:src="videoSrc"
 				:show-progress="progressType"
 				@timeupdate="bindtimeupdate"
-				:enable-progress-gesture="false"
 				:initial-time="progressNum"
+				:enable-progress-gesture="false"
 				:custom-cache="false"
 				@play="checkPlayTimes"
 				@ended="courseFinish"
@@ -52,6 +52,7 @@
 			</view>
 			<view class="mp4_vit_content" v-text="Introduction"></view>
 		</view>
+		<u-modal v-model="show" :content="content" @confirm="checkNettype" show-cancel-button="true"></u-modal>
 	</div>
 </template>
 
@@ -73,26 +74,41 @@ export default {
 			progress: 0,	// 后台记录播放进度条(百分比)
 			progressNum: 0, // 后台记录播放进度条(数字)
 			nowprogress: 0, // 当前播放进度条
+			currentTime: 0,
 			progressType: false,	// 是否显示进度条，同时控制是否提交进度功能
 			upLoading: true,  // 提交进度时修改判断，避免造成多次提交
-			firstTimeToPlay: true  // 判断是否是进入页面首次播放
+			firstTimeToPlay: true,  // 判断是否是进入页面首次播放
+			show: false,
+			content: '当前并非处于wifi网络连接状态，是否继续播放视频？'
 		}
 	},
 	onLoad (option) {
+		let _this = this
 		this.courseId = option.id
+		wx.getNetworkType({
+			success (res) {
+			    const networkType = res.networkType
+				console.log(networkType)
+				if (networkType != 'wifi') {
+					_this.show = true
+				}
+			}
+		})
 	},
 	onShow () {
 		if (!this.hasLoad) {
 			this.GetCourseDetail()
 		}
+		
 	},
 	onUnload () {
-		console.log('onUnload')
+		this.UploadTimeNode(this.fillter(this.currentTime), this.currentTime)
 	},
 	methods: {
 		bindtimeupdate (res) {
 			if (!this.progressType) {
 				this.nowprogress = Math.floor(res.detail.currentTime / res.detail.duration * 10000) / 100  //计算当前进度条
+				this.currentTime = Math.floor(res.detail.currentTime)
 				if (res.detail.currentTime % 60 <= 1 && !this.upLoading) {
 					this.upLoading = true
 					let time = res.detail.currentTime - res.detail.currentTime % 60
@@ -123,7 +139,12 @@ export default {
 			if (!this.progressType) {
 				let str = this.fillter(Math.floor(res.detail.currentTime))
 				this.UploadTimeNode(str, res.detail.currentTime)
+				this.progressType = true
+				this.nowprogress = 100.00
 			}
+		},
+		checkNettype () {
+			this.show = false
 		},
 		async GetCourseDetail () {
 			let msg = await GetCourseDetail({
@@ -136,17 +157,17 @@ export default {
 				this.courseType = msg.Data.ChannelName
 				this.Score = msg.Data.Credit
 				this.progress = this.nowprogress = msg.Data.BrowseScore.slice(0,-1)
-				this.progressNum = msg.Data.Location
+				this.currentTime = this.progressNum = Math.floor(60 * msg.Data.Duration * (this.progress / 100))
 				this.Teacher = msg.Data.TeacherName
 				this.courseTime = msg.Data.Duration + '分钟'
 				this.Introduction = msg.Data.Description
+				console.log(this.progress >= 100)
 				if (this.progress >= 100) {
 					this.progressType = true
+					this.progress = 0
+					this.progressNum = 0
 				}
-				console.log(this.progress)
-				console.log(this.nowprogress)
 			}
-			console.log(msg)
 		},
 		async UploadTimeNode (time, currentTime) {
 			let that = this
@@ -163,7 +184,6 @@ export default {
 			} else {
 				console.log(msg.Message)
 			}
-			console.log(msg)
 		}
 	}
 }
@@ -195,7 +215,7 @@ export default {
 				content: '';
 				width: 600rpx;
 				height: 8rpx;
-				background: #2960b2;
+				background: $brand-primary;
 				position: absolute;
 				bottom: 1rpx;
 				left: 75rpx;
@@ -295,7 +315,7 @@ export default {
 				width: 8rpx;
 				height: 26rpx;
 				margin-right: 10rpx;
-				background: #2960b2;
+				background: $brand-primary;
 				display: block;
 			}
 		}
@@ -305,6 +325,9 @@ export default {
 			font-size: 32rpx;
 			text-indent: 2rem;
 		}
+	}
+	.u-model-footer{
+		flex-direction: row;
 	}
 }
 </style>

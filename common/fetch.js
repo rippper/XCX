@@ -8,7 +8,7 @@ function postMethods (url, datas) {
 				method: 'POST',
 				timeout: 10000,
 				header: {
-					"Content-Type": "application/x-www-form-urlencoded",
+					"Content-Type": "application/json",
 					"ASPXAUTH": aspxauth
 				},
 				success: function (res) {
@@ -79,7 +79,6 @@ function getMethods (url, data) {
 
 function checkStatus (response) {
 	if (response) {
-		console.log(response)
 		if (response.data.Type === 1) {
 			let getAspxauth = response.header.ASPXAUTH || response.header.aspxauth
 			if (getAspxauth) {
@@ -91,12 +90,18 @@ function checkStatus (response) {
 		} else if (response.data.Type === 0) {
 			return response.data
 		} else if (response.data.Type == 401) {
-			uni.removeStorageSync('ASPXAUTH')
+			let app1 = uni.getStorageSync('a_app')
+			let app2 = uni.getStorageSync('p_app')
+			let remember = uni.getStorageSync('remember')
+			uni.clearStorageSync()
+			uni.setStorageSync('a_app', app1)
+			uni.setStorageSync('p_app', app2)
+			uni.setStorageSync('remember',remember)
 			uni.navigateTo({
 				url: "/pages/login/login?type=unlogin"
 			})
 		} else {
-			console.log(response)
+			return response.data
 		}
 	}
 	return {
@@ -110,13 +115,20 @@ function checkStatusToken (response) {
 		if (response.Type === 1) {
 			return response
 		} else if (response.Type === 401) {
-			uni.removeStorageSync('ASPXAUTH')
+			let app1 = uni.getStorageSync('a_app')
+			let app2 = uni.getStorageSync('p_app')
+			let remember = uni.getStorageSync('remember')
+			uni.clearStorageSync()
+			uni.setStorageSync('a_app', app1)
+			uni.setStorageSync('p_app', app2)
+			uni.setStorageSync('remember',remember)
 			uni.navigateTo({
 				url: "/pages/login/login?type=unlogin"
 			})
 		} else if (response.Type === 0) {
 			return response
 		} else {
+			return response
 			console.log('非记录状态：' + response)
 		}
 	}

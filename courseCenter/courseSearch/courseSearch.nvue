@@ -51,7 +51,6 @@ export default {
 					return true
 				}
 			})
-			
 			if (repeat) {
 				this.courseHistory.splice(num, 1)
 				this.courseHistory.unshift(value)

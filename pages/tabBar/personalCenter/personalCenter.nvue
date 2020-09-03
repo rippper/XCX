@@ -1,45 +1,107 @@
 <template>
-	<view class="personalCenter">
+	<view class="personalCenter" :style="'margin-top:' + (height + 45) + 'px'">
+		<view class="content_title">
+			<view class="content_title_status" :style="'height:' + height + 'px'"></view>
+			<view class="content_title_content">
+				<view class="content_title_content_item" @click="makeScan"></view>
+				<view class="content_title_content_item">个人中心</view>
+				<view class="content_title_content_item"></view>
+			</view>
+		</view>
 		<view class="pc_usertop">
 			<view class="pc_ut_infopart">
 				<image src="../../../static/person_cener_avatar.png"></image>
 				<view class="pc_ut_infopartword">
-					<view class="pc_ut_ipw_username" v-text="userName"></view>
-					<view class="pc_ut_ipw_score">学时: {{score}}</view>
+					<view class="pc_ut_ipw_username" v-text="userMsg.Username"></view>
+					<view class="pc_ut_ipw_score">学时: {{userMsg.TotalCredit}}</view>
 				</view>
 			</view>
 		</view>
 		<view class="pc_cell_list">
 			<view class="pc_cell_firstpart">
 				<cell-btn title="我的学时" is-link to="/personalCenter/myScore/myScore">
-					<u-icon name="clock" color="#2979ff" size="40" slot="iconpart"></u-icon>
+					<u-icon name="clock" color="#2979ff" size="40"></u-icon>
 				</cell-btn>
 				<cell-btn title="我的课程" is-link to="/personalCenter/myCourse/myCourse">
-					<u-icon name="play-circle" color="#2979ff" size="40" slot="iconpart"></u-icon>
+					<u-icon name="play-circle" color="#2979ff" size="40"></u-icon>
 				</cell-btn>
-				<cell-btn title="我的考试" is-link to="/courseCenter/playJYAicc/playJYAicc">
-					<u-icon name="file-text" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				<cell-btn title="我的考试" is-link to="/examCenter/examList/examList?backway=pc">
+					<u-icon name="file-text" color="#2979ff" size="40"></u-icon>
 				</cell-btn>
 			</view>
 		</view>
 		<view class="pc_cell_list">
 			<view class="pc_cell_secoundpart">
-				<cell-btn title="设置" is-link to="/courseCenter/playMp4/playMp4">
-					<u-icon name="setting" color="#2979ff" size="40" slot="iconpart"></u-icon>
+				<cell-btn title="设置" is-link to="/personalCenter/setList/setList">
+					<u-icon name="setting" color="#2979ff" size="40"></u-icon>
 				</cell-btn>
 			</view>
+		</view>
+		<view class="pc_loginout">
+			<view class="pc_loginout_btn" @click="loginout">退出登录</view>
 		</view>
 	</view>
 </template>
 
 <script>
-import cellBtn from '../../../components/cellBtn/cellBtn.nvue'
+import cellBtn from '../../../components/cellBtn/cellBtn.nvue';
+import { GetUserInfo, LoginOut, CheckLoginStatus } from '../../../common/getData.js';
+import { mapState } from 'vuex';
+
 export default {
 	name: 'personalCenter',
 	data () {
 		return {
-			userName: 'zyb',
-			score: 10
+			userMsg: '',
+			height: ''
+		}
+	},
+	computed: {
+		...mapState(['userInfo'])
+	},
+	onLoad () {
+		let _this = this
+		uni.getSystemInfo({
+			success: function (data) {
+				_this.height=data.statusBarHeight;
+			}
+		})
+	},
+	onShow () {
+		this.GetUserInfo()
+		console.log(this.userInfo)
+	},
+	methods: {
+		makeScan () {
+			uni.scanCode({
+				success: function (res) {
+					console.log(res)
+					uni.navigateTo({
+						url: '/personalCenter/checkToLogin/checkToLogin?info=' + res.result
+					})
+				}
+			})
+		},
+		async GetUserInfo () {
+			let msg = await GetUserInfo()
+			if (msg.Type == 1) {
+				this.userMsg = msg.Data
+			}
+		},
+		async loginout () {
+			let msg = await LoginOut()
+			if (msg.Type == 1) {
+				let app1 = uni.getStorageSync('a_app')
+				let app2 = uni.getStorageSync('p_app')
+				let remember = uni.getStorageSync('remember')
+				uni.clearStorageSync()
+				uni.setStorageSync('a_app', app1)
+				uni.setStorageSync('p_app', app2)
+				uni.setStorageSync('remember',remember)
+				uni.navigateTo({
+					url: '/pages/login/login'
+				})
+			}
 		}
 	},
 	components: {
@@ -51,8 +113,33 @@ export default {
 <style lang="scss">
 @import '../../../style/mixin.scss';
 .personalCenter{
-	height: 100vh;
 	background: #ecf1f4;
+	.content_title{
+		width: 100%;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 100;
+		.content_title_status{
+			background: $brand-primary;
+		}
+		.content_title_content{
+			height: 45px;
+			background: $brand-primary;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			.content_title_content_item{
+				flex: 1;
+				height: 45px;
+				line-height: 40px;
+				text-align: center;
+				font-size: 32rpx;
+				font-weight: bold;
+				color: #fff;
+			}
+		}
+	}
 	.pc_usertop{
 		width: 100%;
 		height: 391rpx;
@@ -76,7 +163,7 @@ export default {
 			.pc_ut_infopartword{
 				height: 128rpx;
 				padding-left: 30rpx;
-				margin-top: 60rpx;
+				margin-top: 10rpx;
 				.pc_ut_ipw_username{
 					margin-bottom: 30rpx;
 					font-size: 36rpx;
@@ -93,6 +180,19 @@ export default {
 		padding: 0 30rpx;
 		background: #fff;
 		margin-bottom: 25rpx;
+	}
+	.pc_loginout{
+		margin-top: 60rpx;
+		.pc_loginout_btn{
+			width: 95%;
+			height: 80rpx;
+			line-height: 80rpx;
+			margin: 0 auto;
+			border-radius: 15rpx;
+			text-align: center;
+			background: $brand-primary;
+			color: #fff;
+		}
 	}
 }
 </style>

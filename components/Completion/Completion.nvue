@@ -1,7 +1,8 @@
 <template>
 	<view class="completion">
-		<view v-for="i in spaceNumber" :key="i">
-			
+		<view class="completion_input" v-for="i in spaceNumber" :key="i">
+			<label>第{{i+1}}空:</label>
+			<input type="text" v-model="currentAnswer[i]" @input="upDateAnswer">
 		</view>
 	</view>
 </template>
@@ -11,18 +12,57 @@
 		name: 'completion',
 		data () {
 			return {
-				
+				currentAnswer: []
 			}
 		},
 		props: {
-			spaceNumber: Number
+			spaceNumber: Number,
+			Answer: [Array, String],
+			topicIndex: Number,
+			topicType: String
 		},
 		methods: {
-			
+			upDateAnswer () {
+				this.$emit('inputChange', this.currentAnswer)
+			}
+		},
+		watch: {
+			topicIndex (val) {
+				if (this.topicType !== '填空题') {
+					return false
+				}
+				this.currentAnswer = []
+				for (let i = 0; i < this.spaceNumber; i++) {
+					this.currentAnswer.push('')
+				}
+				if (this.Answer != 'none') {
+					this.currentAnswer = this.Answer
+				}
+			}
 		}
 	}
 </script>
 
 <style lang="scss">
-
+.completion{
+	width: 100%;
+	padding: 0 30rpx;
+	margin-top: 50rpx;
+	.completion_input{
+		margin-bottom: 15rpx;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		label{
+			margin-right: 15rpx;
+			font-size: 32rpx;
+		}
+		input{
+			padding: 0 0 0 4px;
+			border: 1rpx solid #666;
+			font-size: 26rpx;
+		}
+	}
+}
 </style>

@@ -1,0 +1,85 @@
+<template>
+	<view class="trainExamList" :class="{ 'tel_nodata': noData }">
+		<exam-item v-for="(item, index) in examList" :key="index" :itemInfo="item" @getExamId="changeContent"></exam-item>
+		<u-modal v-model="show" :content="content" @confirm="linkToExamPage" show-cancel-button="true"></u-modal>
+	</view>
+</template>
+
+<script>
+import { GetClassExamList } from '../../common/getData.js';
+import examItem from '../../components/examItem/examItem.nvue';
+export default {
+	name: 'trainExamList',
+	data () {
+		return {
+			ExamId: '',
+			examList: [],
+			trainType: 'train',
+			noData: false,
+			show: false,
+			content: ''
+		}
+	},
+	onLoad (option) {
+		this.ExamId = option.Id
+		this.GetClassExamList()
+	},
+	methods: {
+		changeContent (title, obj) {
+			this.content = '您是否确定参加' + title + '？'
+			this.show = true
+			this.currentObj = obj
+		},
+		linkToExamPage (item) {
+			if (this.trainType == 'train') {
+				uni.navigateTo({
+					url: '/examCenter/examTestPage/examTestPage?Id=' + this.currentObj.ExamId + '&fromType=train'
+				})
+			} else {
+				uni.navigateTo({
+					url: '/examCenter/examTestPage/examTestPage?Id=' + this.currentObj.ExamId + '&fromType=exam'
+				})
+			}
+		},
+		async GetClassExamList () {
+			let msg = await GetClassExamList({
+				Id: this.ExamId
+			})
+			if (msg.Type === 1) {
+				msg.Data.List.map(item => {
+					if (item.Status == 'UnFinish') {
+						item.passType = '不合格'
+					} else if (item.Status == 'UnJoin') {
+						item.passType = '未考'
+					} else if (item.Status == 'Finish') {
+						item.passType = '合格'
+					}
+				})
+				this.examList = msg.Data.List
+				if (this.examList.length == 0) {
+					this.noData = true
+				}
+			}
+		}
+	},
+	components: {
+		examItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.trainExamList{
+	width: 100%;
+	min-height:100vh;
+}
+.tel_nodata{
+	@include setBackground('no_data.png');
+	background-size: 254rpx 402rpx;
+	background-position: center center;
+}
+.u-model-footer{
+	flex-direction: row;
+}
+</style>

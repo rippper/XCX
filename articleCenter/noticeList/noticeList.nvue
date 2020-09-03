@@ -1,0 +1,94 @@
+<template>
+	<view class="noticeList">
+		<scroll-view class="nl_listpart" scroll-y :class="{ 'nl_list_nodatabg': noDataBg }" @scrolltolower="GetNoticeInfoList">
+			<notice-item v-for="(item, index) in noticeList" :key="index" :noticeInfo="item"></notice-item>
+			<u-loadmore :class="{ 'el_noData': noDataBg }" :status="status"/>
+			<view v-text="warning"></view>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+import { GetNoticeInfoList } from '../../common/getData.js';
+import noticeItem from '../../components/noticeItem/noticeItem.nvue';
+export default {
+	name: 'noticeList',
+	data () {
+		return {
+			noticeList: [],
+			status: 'loading',
+			Page: 1,
+			Rows: 15,
+			totalCount: 0,
+			noDataBg: false,
+			inTheEnd: false,
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			},
+			warning: ''
+		}
+	},
+	onLoad () {
+		this.GetNoticeInfoList()
+	},
+	methods: {
+		async GetNoticeInfoList () { 
+			if (this.inTheEnd) {
+				return
+			}
+			let msg = await GetNoticeInfoList({
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type == 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				this.noticeList = [...this.noticeList, ...msg.Data.List]
+				if (this.noticeList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			} else {
+				this.warning = JSON.stringify(msg)
+			}
+			// console.log(msg)
+		}
+	},
+	components: {
+		noticeItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.noticeList{
+	width: 100%;
+	height: 100vh;
+	background: #fff;
+	.nl_listpart{
+		width: 100%;
+		height: 100%;
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.nl_list_nodatabg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

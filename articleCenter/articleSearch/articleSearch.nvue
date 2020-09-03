@@ -1,0 +1,193 @@
+<template>
+	<view class="examSearch">
+		<view class="es_searchinput">
+			<u-search placeholder="请输入文章名称" v-model="Keyword" :clearabled="true" @search="selectHistory" @custom="selectHistory"></u-search>
+		</view>
+		<search-history class="search_history" :historyList="articleHistory" :class="{ 'history_disappear': searched }" @makeSelect="selectHistory" @delete="deleteHistory"></search-history>
+		<scroll-view class="es_searchinput_list" :class="{ 'artresult_disappear': !searched, 'ar_noDataBg': noDataBg }" @scrolltolower="GetArticleInfoList">
+			<article-item v-for="(item, index) in articleList" :key="index" :articleInfo="item"></article-item>
+			<u-loadmore :class="{ 'es_noData': noDataBg }" :status="status"/>
+		</scroll-view>
+		<u-toast ref="uToast" />
+	</view>
+</template>
+
+<script>
+import searchHistory from '../../components/searchHistory/searchHistory.nvue';
+import articleItem from '../../components/articleItem/articleItem.nvue';
+import { GetArticleInfoList } from '../../common/getData.js';
+import { imgAddress } from '../../common/plugin.js';
+export default {
+	name: 'examSearch',
+	data () {
+		return {
+			Keyword: '',
+			articleHistory: [],
+			articleList: [],
+			totalCount: 0,
+			Page: 1,
+			Rows: 10,
+			searched: false,
+			noDataBg: false,
+			inTheEnd: false,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onShow () {
+		this.getHistory()
+	},
+	methods: {
+		deleteHistory () {
+			this.articleHistory = []
+			uni.removeStorageSync('articleHistory')
+		},
+		getHistory () {
+			let arr = uni.getStorageSync('articleHistory')
+			Array.isArray(arr) ? this.articleHistory = arr : this.articleHistory = []
+		},
+		selectHistory (value) {
+			if (value == '') {
+				this.$refs.uToast.show({
+					title: '请输入文章名称',
+					type: 'warning',
+					icon: false,
+					position: 'bottom'
+				})
+				return false
+			}
+			this.Page = 1
+			this.status = 'loading'
+			this.noDataBg = false
+			this.inTheEnd = false
+			this.totalCount = 0
+			this.articleList = []
+			this.linkToList(value)
+		},
+		linkToList (value) {
+			this.Keyword = value
+			let num = ''
+			let repeat = this.articleHistory.some((item, index) => {
+				if (item == value) {
+					num = index
+					return true
+				}
+			})
+			if (repeat) {
+				this.articleHistory.splice(num, 1)
+				this.articleHistory.unshift(value)
+				uni.setStorageSync('articleHistory', this.articleHistory)
+				this.GetArticleInfoList()
+				return false
+			}
+			if (this.articleHistory.length > 12) {
+				this.articleHistory.pop()
+				this.articleHistory.unshift(value)
+				uni.setStorageSync('articleHistory', this.articleHistory)
+			} else {
+				this.articleHistory.unshift(value)
+				uni.setStorageSync('articleHistory', this.articleHistory)
+			}
+			this.GetArticleInfoList()
+		},
+		async GetArticleInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetArticleInfoList({
+				Keyword: this.Keyword,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			// console.log(msg.Type)
+			if (msg.Type === 1) {
+				this.searched = true
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					item.ArticleImg = item.ArticleImg ? imgAddress(item.ArticleImg) : require('../../static/error-img.png')
+				})
+				this.articleList = [...this.articleList, ...msg.Data.List]
+				console.log(this.articleList)
+				if (this.articleList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page +=1
+			} else if (msg.Type === 500) {
+				this.$refs.uToast.show({
+					title: '您输入的内容存在敏感字符',
+					type: 'warning',
+					icon: false,
+					position: 'bottom'
+				})
+			}
+			// console.log(msg)
+		}
+	},
+	components: {
+		searchHistory,
+		articleItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.examSearch{
+	height: 100vh;
+	.es_searchinput{
+		width: 100%;
+		padding: 20rpx;
+		background: #fff;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	.u-search{
+		flex-direction: row;
+	}
+	.u-content{
+		flex-direction: row;
+	}
+	.history_disappear{
+		display: none;
+	}
+	.artresult_disappear{
+		display: none;
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.search_history{
+		margin-top: 120rpx;
+	}
+	.es_searchinput_list{
+		height: 100%;
+		padding-top: 104rpx;
+		background: #fff;
+	}
+	.es_noData{
+		display: none;
+	}
+	.ar_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+</style>

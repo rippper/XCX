@@ -1,22 +1,40 @@
 <template>
-	<view class="ebl_outbox">
+	<view class="ebl_outbox" @click="linkToDetail">
 		<view class="ebl_elcbookimg">
-			<image :src="bookItem.bookImg"></image>
+			<image :src="bookItem.BookImg" v-if="bookImgType" @error="changeImg"></image>
+			<image src="../../static/errorBookImg.png" v-else></image>
 		</view>
-		<text v-text="bookItem.Title"></text>
+		<text class="ebl_elcbookname" v-text="bookItem.BookName"></text>
 	</view>
 </template>
 
 <script>
-	export default {
-		name: 'elcBookList',
-		props: {
-			bookItem: Object
+export default {
+	name: 'elcBookList',
+	data () {
+		return {
+			bookImgType: true
+		}
+	},
+	props: {
+		bookItem: Object
+	},
+	methods: {
+		changeImg () {
+			this.bookImgType = false
+		},
+		linkToDetail () {
+			uni.setStorageSync('eBookMsg', JSON.stringify(this.bookItem))
+			uni.navigateTo({
+				url: '/eBookCenter/eBookSection/eBookSection'
+			})
 		}
 	}
+}
 </script>
 
 <style lang="scss">
+@import '../../style/mixin.scss';
 .ebl_outbox{
 	width: 190rpx;
 	padding-bottom: 70rpx;
@@ -27,9 +45,11 @@
 			height: 260rpx;	
 		}
 	}
-	text{
-		font-size: 26rpx;
+	.ebl_elcbookname{
+		font-size: 32rpx;
 		font-weight: bold;
+		text-align: center;
+		@include ellipsis_two;
 	}
 }
 </style>

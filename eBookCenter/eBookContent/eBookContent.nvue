@@ -1,0 +1,399 @@
+<template>
+	<view class="eBookContent">
+		<u-popup v-model="show" length="60%">
+				<view class="ebc_sectionList_contextTitle">目录</view>
+				<scroll-view class="ebc_sectionList" scroll-y @scrolltolower="GetBookChapterInfoList">
+					
+					<view class="ebc_sectionList_item" :class="{ 'ebc_sl_itemselect': item.isClick }" v-for="(item, index) in sectionList" :key="index" v-text="item.Title" @click="contentChange(item, index)"></view>
+				</scroll-view>
+		</u-popup>
+		<view class="ebc_title" :class="{ 'msgBoxDiapper': msgBoxStation }" v-text="Title"></view>
+		<scroll-view scroll-y class="ebc_contentbox"  :class="{ 'ebc_cb_nightmodel': nightModel, 'ebc_cb_setYellow': setYellow, 'ebc_cb_setPurple': setPurple, 'ebc_cb_setBlue': setBlue }"  @click="msgBoxTypeChange"  @scroll="msgBoxTypeStart">
+			<view class="ebc_contentbox_inner" :style="'font-size:' + (fontNumber * 2 + 24) + 'rpx;' " v-html="sectionContent"></view>
+		</scroll-view>
+		<view class="ebc_bottompart" :class="{ 'msgBoxDiapper': msgBoxStation }">
+			<view class="ebc_bottompart_btn ebc_btn_left" @click="openSectionList">
+				<view class="ebc_btl_img">
+					<image src="../static/ebk_listwrite.png"></image>
+				</view>
+				<view class="ebc_btl_font">
+					章节选择
+				</view>
+			</view>
+			<view class="ebc_bottompart_btn ebc_btn_center" @click="openSetBoxs">
+				<view class="ebc_btm_img">
+					<image src="../static/ebk_setwrite.png"></image>
+				</view>
+				<view class="ebc_btm_font">
+					设置
+				</view>
+			</view>
+			<view class="ebc_bottompart_btn ebc_btn_right" @click="changeNightModel">
+				<view class="ebc_btr_img">
+					<image src="../static/ebk_moonwrite.png"></image>
+				</view>
+				<view class="ebc_btr_font">
+					夜间模式
+				</view>
+			</view>
+			<view class="ebc_bottompart_settable" :class="{ 'tabledisappear': setTableStyle }">
+				<view class="ebc_bpst_fontSize">
+					<view>A-</view>
+					<view class="ebc_bpst_fs_fontline">
+						<u-slider v-model="fontSizeNum" step="10" min="1" max="100"></u-slider>
+					</view>
+					<view>A+</view>
+				</view>
+				<view class="ebc_bpst_fontSizeSelect">
+					<view>字体大小: {{ fontNumber }}</view>
+				</view>
+				<view class="ebc_bpst_backgroundColor">
+					<view class="ebc_bpst_bc_font">
+						背景色：
+					</view>
+					<view class="ebc_bpst_bc_colorbox">
+						<view class="ebc_bpst_bccb_box ebc_box_yellow" :class="{ 'ebc_is_select': setYellow }" @click="setBackground('yellow')">
+							<image src="../static/eb_right.png" v-if="setYellow"></image>
+						</view>
+						<view class="ebc_bpst_bccb_box ebc_box_purple" :class="{ 'ebc_is_select': setPurple }" @click="setBackground('purple')">
+							<image src="../static/eb_right.png" v-if="setPurple"></image>
+						</view>
+						<view class="ebc_bpst_bccb_box ebc_box_blue" :class="{ 'ebc_is_select': setBlue }" @click="setBackground('blue')">
+							<image src="../static/eb_right.png" v-if="setBlue"></image>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+import { GetBookChapterContent, GetBookChapterInfoList } from '../../common/getData.js'
+export default {
+	name: 'eBookContent',
+	data () {
+		return {
+			sectionId: '',
+			bookId: '',
+			Title: '',
+			sectionContent: '',
+			sectionList: [],
+			totalCount: 0,
+			noDataBg: '',
+			Page: 1,
+			Rows: 15,
+			msgBoxStation: false, // 上下菜单框是否显示
+			show: false,
+			inTheEnd: false,
+			nightModel: false,
+			fontSizeNum: 60,
+			fontNumber: 6,
+			setYellow: false,
+			setPurple: false,
+			setBlue: false,
+			setTableStyle: false
+		}
+	},
+	onLoad (option) {
+		this.sectionId = option.Id
+		this.bookId = option.BookId
+		this.Title = option.Section
+		this.GetBookChapterContent()
+		this.GetBookChapterInfoList()
+	},
+	methods:{
+		msgBoxTypeChange () {
+			this.msgBoxStation = !this.msgBoxStation
+			this.setTableStyle = false
+		},
+		msgBoxTypeStart () {
+			this.msgBoxStation = true
+		},
+		openSectionList () {
+			this.msgBoxStation = true
+			this.show = true
+		},
+		changeNightModel () {
+			this.nightModel = !this.nightModel
+			this.setYellow = false
+			this.setPurple = false
+			this.setBlue = false
+		},
+		contentChange (obj, index) {
+			this.sectionId = obj.BookTitelId
+			this.sectionContent = ''
+			this.Title = obj.Title
+			this.sectionList.forEach((item,ind) => {
+				this.$set(this.sectionList[ind], 'isClick', false)
+			})
+			this.$set(this.sectionList[index], 'isClick', true)
+			this.GetBookChapterContent()
+			this.show = false
+		},
+		setBackground (color) {
+			if (color == 'yellow') {
+				this.setYellow = true
+				this.setPurple = false
+				this.setBlue = false
+				this.nightModel = false
+			} else if (color == 'purple') {
+				this.setYellow = false
+				this.setPurple = true
+				this.setBlue = false
+				this.nightModel = false
+			} else if (color == 'blue') {
+				this.setYellow = false
+				this.setPurple = false
+				this.setBlue = true
+				this.nightModel = false
+			}
+		},
+		openSetBoxs () {
+			this.setTableStyle = !this.setTableStyle
+			console.log(this.setTableStyle)
+		},
+		async GetBookChapterContent () {
+			let msg = await GetBookChapterContent({
+				Id: this.sectionId
+			})
+			if (msg.Type === 1) {
+				this.sectionContent = msg.Data.Content
+			}
+		},
+		async GetBookChapterInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetBookChapterInfoList({
+				BookId: this.bookId,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noDataBg = true
+					return
+				}
+				msg.Data.List.forEach(item => {
+					if (item.BookTitelId == this.sectionId) {
+						item.isClick = true
+					} else {
+						item.isClick = false
+					}
+				})
+				this.sectionList = [...this.sectionList, ...msg.Data.List]
+				if (this.sectionList.length == this.totalCount) {
+					this.inTheEnd = true
+				}
+				this.Page += 1 
+			}
+		}
+	},
+	watch: {
+		fontSizeNum (val) {
+			this.fontNumber = val / 10
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookContent{
+	width: 100%;
+	height: 100vh;
+	.ebc_sectionList_contextTitle{
+		width: 100%;
+		height: 125rpx;
+		line-height: 125rpx;
+		font-size: 40rpx;
+		text-align: center;
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 100;
+	}
+	.ebc_sectionList{
+		width: 100%;
+		height: 100%;
+		padding-top: 125rpx;
+		position: relative;
+		.ebc_sectionList_item{
+			padding: 5rpx 10rpx;
+			font-size: 32rpx;
+		}
+		.ebc_sl_itemselect{
+			color: #fe4365;
+		}
+	}
+	.ebc_title{
+		width: 100%;
+		height: 100rpx;
+		line-height: 100rpx;
+		padding-left: 30rpx;
+		background: #000;
+		font-size: 36rpx;
+		color: #fff;
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+		@include ellipsis_two(1);
+	}
+	.ebc_contentbox{
+		width: 100%;
+		height: 100%;
+		.ebc_contentbox_inner{
+			width: 100%;
+			padding: 20rpx 30rpx;
+			font-size: 64rpx;
+		}
+	}
+	.ebc_cb_nightmodel{
+		background: #222;
+		color: #e8e8e8;
+	}
+	.ebc_cb_setYellow{
+		background: #decea9;
+	}
+	.ebc_cb_setPurple{
+		background: #cad9e8;
+	}
+	.ebc_cb_setBlue{
+		background: #d1edd1;
+	}
+	.ebc_bottompart{
+		width: 100%;
+		height: 145rpx;
+		padding-bottom: 20rpx;
+		background: #000;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		z-index: 99;
+		display: flex;
+		flex-direction: row;
+		.ebc_bottompart_btn{
+			flex: 1;
+			height: 100%;
+			.ebc_btl_img,.ebc_btm_img,.ebc_btr_img{
+				width:100%;
+				height: 80rpx;
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: center;
+			}
+			image{
+				width: 48rpx;
+				height: 48rpx;
+			}
+			.ebc_btl_font{
+				font-size: 32rpx;
+				color: #fff;
+				text-align: center;
+			}
+			.ebc_btm_font{
+				font-size: 32rpx;
+				color: #fff;
+				text-align: center;
+			}
+			.ebc_btr_font{
+				font-size: 32rpx;
+				color: #fff;
+				text-align: center;
+			}
+		}
+		.ebc_bottompart_settable{
+			width: 92%;
+			height: 0;
+			border-radius: 15rpx;
+			position: absolute;
+			bottom: 160rpx;
+			left: 32rpx;
+			background: #000;
+			opacity: 0;
+			overflow: hidden;
+			.ebc_bpst_fontSize{
+				width: 100%;
+				height: 120rpx;
+				display: flex;
+				flex-direction: row;
+				justify-content: space-around;
+				align-items: center;
+				color: #fff;
+				.ebc_bpst_fs_fontline{
+					width: 450rpx;
+				}
+			}
+			.ebc_bpst_fontSizeSelect{
+				width: 100%;
+				height: 80rpx;
+				line-height: 60rpx;
+				text-align: center;
+				font-size: 32rpx;
+				color: #fff;
+			}
+			.ebc_bpst_backgroundColor{
+				width: 100%;
+				height: 120rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				.ebc_bpst_bc_font{
+					width: 20%;
+					height: 120rpx;
+					line-height: 120rpx;
+					text-align: right;
+					font-size: 32rpx;
+					color: #fff;
+				}
+				.ebc_bpst_bc_colorbox{
+					width: 80%;
+					height: 120rpx;
+					display: flex;
+					flex-direction: row;
+					justify-content: space-around;
+					align-items: center;
+					.ebc_bpst_bccb_box{
+						width: 120rpx;
+						height: 60rpx;
+						border: 1rpx solid #000;
+						border-radius: 10rpx;
+						background: #fff;
+						display: flex;
+						flex-direction: row;
+						justify-content: center;
+						align-items: center;
+						image{
+							width: 48rpx;
+							height: 48rpx;
+						}
+					}
+					.ebc_box_yellow{
+						background: #decea9;
+					}
+					.ebc_box_purple{
+						background: #cad9e8;
+					}
+					.ebc_box_blue{
+						background: #d1edd1;
+					}
+					.ebc_is_select{
+						border: 1rpx solid #f00;
+					}
+				}
+			}
+		}
+		.tabledisappear{
+			opacity: 1!important;
+			height: 320rpx!important;
+		}
+	}
+	.msgBoxDiapper{
+		display: none;
+	}
+}
+</style>

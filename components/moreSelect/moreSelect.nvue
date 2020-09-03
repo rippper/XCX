@@ -1,9 +1,19 @@
 <template>
 	<view class="moreSelect">
-		<checkbox-group class="radio-group" @change="radioChange" ref="radiogroup">
+		<checkbox-group class="radio-group" @change="radioChange" v-if="Type == 'normal'">
 			<label class="msec_item" v-for="(item, index) in ItemInfo" :key="index" :class="{ 'msec_item_select': selectAnswer.indexOf(item.ThemeItemFlag) == -1 ? false : true }">
 				<checkbox class="msec_item_radio" :value="item.ThemeItemFlag" :checked="selectAnswer.indexOf(item.ThemeItemFlag) == -1 ? false : true"></checkbox>
-				<view class="msec_item_answer">{{ item.ThemeItemFlag }}.{{ item.ThemeItemTitle }}</view>
+				<view class="msec_item_answer">
+					<text>{{ item.ThemeItemFlag }}.{{ item.ThemeItemTitle }}</text>
+				</view>
+			</label>
+		</checkbox-group>
+		<checkbox-group class="radio-group" v-else-if="Type == 'worry'" >
+			<label class="msec_item" v-for="(item, index) in reviewAnswerList" :key="index" :class="{ 'msitem_select_true': reviewAnswer.indexOf(item.ItemFlag) == -1 ? false: true }">
+				<checkbox class="msec_item_radio"></checkbox>
+				<view class="msec_item_answer">
+					<text>{{ item.ItemFlag }}.{{ item.Name }}</text>
+				</view>
 			</label>
 		</checkbox-group>
 	</view>
@@ -14,25 +24,49 @@ export default {
 	name: 'moreSelect',
 	data () {
 		return {
-			selectAnswer: []
+			selectAnswer: [],
+			reviewAnswer: ''
 		}
 	},
 	props: {
-		ItemInfo: Array,
-		Answer: [String, Array],
-		topicIndex: [String, Number]
+		ItemInfo: Array, // 考试时使用，考试选项列表
+		Answer: [String, Array], // 考试时使用，回看时已填写的答案记录
+		topicIndex: [String, Number], // 题目序号
+		topicType: String, // 考试时使用，题目类型
+		Type: { // 是否为错题查看判断字符
+			Type: String,
+			default: 'normal'
+		},
+		reviewAnswerList: { // 错题查看时使用，错题答案列表
+			Type: Array,
+			default: []
+		},
+		rightAnswer: { // 错题查看时使用，正确答案
+			Type: String,
+			default: 'none'
+		},
+		userAnswer: { // 错题查看时使用，用户填写的答案
+			Type: String,
+			default: 'N'
+		}
 	},
 	methods: {
 		radioChange (e) {
-			console.log(e.detail.value)
+			// console.log(e.detail.value)
 			this.selectAnswer = e.detail.value
 			this.$emit('moreChange', this.selectAnswer)
 		}
 	},
 	watch: {
 		topicIndex (val) {
+			if (this.Type == 'worry') {
+				this.reviewAnswer = this.rightAnswer.split('')
+				return 
+			}
+			if (this.topicType !== '多选题') {
+				return false
+			}
 			this.selectAnswer = ''
-			console.log(this.$refs.radiogroup)
 			if (this.Answer != 'none' && Array.isArray(this.Answer)) {
 				this.selectAnswer = this.Answer
 			}
@@ -51,7 +85,7 @@ export default {
 		.msec_item{
 			width: 100%;
 			max-height: 180rpx;
-			padding-left: 30rpx;
+			padding: 20rpx 30rpx;
 			margin-bottom: 30rpx;
 			border: 1rpx solid #e8e8e8;
 			border-radius: 15rpx;
@@ -59,7 +93,6 @@ export default {
 			display: flex;
 			flex-direction: row;
 			position: relative;
-			@include ellipsis_two();
 			.msec_item_radio{
 				width: 0;
 				height: 0;
@@ -69,13 +102,21 @@ export default {
 				left: 0;
 			}
 			.msec_item_answer{
-				line-height: 90rpx;
+				width: 100%;
+				height: 100%;
 				font-size: 32rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
 			}
 		}
 		.msec_item_select{
 			border: 1rpx solid #f00;
 			color: #f00;
+		}
+		.msitem_select_true{
+			border: 1rpx solid $brand-primary;
+			color: $brand-primary;
 		}
 	}
 }

@@ -1,0 +1,258 @@
+<template>
+	<view class="eBookSection">
+		<view class="ebs_eBookInfo">
+			<view class="ebs_ebi_img">
+				<image :src="eBookInfo.BookImg"></image>
+			</view>
+			<view class="ebs_ebi_infolist">
+				<view class="ebs_ebi_infolist_inner">
+					<view class="ebs_ebi_bookName"><text class="ebs_ebi_bookName_label">书名:</text><text class="ebs_ebi_bookName_content" v-text="eBookInfo.BookName"></text></view>
+					<view class="ebs_ebi_authorName"><text class="ebs_ebi_authorName_label">作者:</text><text class="ebs_ebi_authorName_content" v-text="eBookInfo.AutoName == '' ? '匿名' : eBookInfo.AutoName"></text></view>
+				</view>
+			</view>
+		</view>
+		<view class="ebs_eBookContext">
+			<view class="ebs_eBookContext_utabs">
+				<u-tabs-swiper ref="uTabs" :list="list" :is-scroll="false" :current="current" @change="tabsChange"></u-tabs-swiper>
+			</view>
+			<swiper class="ebs_eBookContext_swiper" :current="swiperCurrent" @transition="transition" @animationfinish="animationfinish">
+				<swiper-item class="swiper-item">
+					<scroll-view class="swiper-item-view" scroll-y>
+						<view class="ebs_eBookContext_introduction" v-html="eBookInfo.Content"></view>
+					</scroll-view>
+				</swiper-item>
+				<swiper-item class="swiper-item">
+					<scroll-view class="swiper-item-view" :class="{ 'noSection': noDataBg }" scroll-y @scrolltolower="GetBookChapterInfoList" >
+						<e-book-section-item v-for="(item, index) in sectionList" :key="index" :sectionInfo="item" :bookId="eBookInfo.BookNameId"></e-book-section-item>
+						<u-loadmore :class="{ 'ebs_noData': noData }" :status="status"/>
+					</scroll-view>
+				</swiper-item>
+			</swiper>
+		</view>
+		<u-modal v-model="show" :content="content" show-cancel-button="false" @confirm="goBack"></u-modal>
+	</view>
+</template>
+
+<script>
+import { GetBookChapterInfoList } from '../../common/getData.js';
+import eBookSectionItem from '../../components/eBookSectionItem/eBookSectionItem.nvue'
+export default {
+	name: 'eBookSection',
+	data () {
+		return {
+			eBookInfo: '',
+			list: [{
+				name: '简介'
+			}, {
+				name: '章节目录'
+			}],
+			current: 0,
+			swiperCurrent: 0,
+			sectionList: [],
+			noData: true,
+			noDataBg: false,
+			inTheEnd: false,
+			Page: 1,
+			Rows: 15,
+			show: false,
+			content: '暂无书籍信息',
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onLoad () {
+		this.eBookInfo = JSON.parse(uni.getStorageSync('eBookMsg'))
+		console.log(this.eBookInfo)
+		if (this.eBookInfo) {
+			this.GetBookChapterInfoList()
+		} else {
+			this.show = true
+		}
+	},
+	methods: {
+		goBack () {
+			uni.navigateBack()
+		},
+		tabsChange(index) {
+			this.swiperCurrent = index;
+		},
+		transition(e) {
+			let dx = e.detail.dx;
+			this.$refs.uTabs.setDx(dx);
+		},
+		animationfinish(e) {
+			let current = e.detail.current;
+			this.$refs.uTabs.setFinishCurrent(current);
+			this.swiperCurrent = current;
+			this.current = current;
+		},
+		async GetBookChapterInfoList () {
+			let msg = await GetBookChapterInfoList({
+				BookId: this.eBookInfo.BookNameId,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				if (this.inTheEnd) {
+					return false
+				}
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					this.noData = true
+					this.noDataBg = true
+					return
+				}
+				if (this.Page > 1) {
+					this.noData = false
+				}
+				this.sectionList = [...this.sectionList, ...msg.Data.List]
+				if (this.sectionList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			}
+		}
+	},
+	components: {
+		eBookSectionItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookSection{
+	width: 100%;
+	height: 100vh;
+	.ebs_eBookInfo{
+		width: 100%;
+		height: 30%;
+		padding: 0 30rpx;
+		background: #fff;
+		display: flex;
+		flex-direction: row;
+		.ebs_ebi_img{
+			width: 35%;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			image{
+				width: 210rpx;
+				height: 300rpx;
+			}
+		}
+		.ebs_ebi_infolist{
+			width: 65%;
+			padding-left: 15rpx;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			.ebs_ebi_infolist_inner{
+				width: 100%;
+			}
+			.ebs_ebi_bookName{
+				width: 100%;
+				max-height: 80rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				font-size: 32rpx;
+				.ebs_ebi_bookName_label{
+					width: 85rpx;
+					height: 40rpx;
+					line-height: 40rpx;
+					word-wrap: break-word;
+					word-break: normal;
+				}
+				.ebs_ebi_bookName_content{
+					width: 400rpx;
+					max-height: 80rpx;
+					line-height: 40rpx;
+					@include ellipsis_two;
+				}
+			}
+			.ebs_ebi_authorName{
+				width: 100%;
+				max-height: 80rpx;
+				margin-top: 30rpx;
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				font-size: 32rpx;
+				.ebs_ebi_authorName_label{
+					width: 85rpx;
+					height: 40rpx;
+					line-height: 40rpx;
+				}
+				.ebs_ebi_authorName_content{
+					width: 400rpx;
+					max-height: 80rpx;
+					min-height: 40rpx;
+					line-height: 40rpx;
+					@include ellipsis_two;
+				}
+			}
+		}
+	}
+	.ebs_eBookContext{
+		width: 100%;
+		height: 70%;
+		position: relative;
+		.ebs_eBookContext_utabs{
+			width: 100%;
+			border-bottom: 1rpx solid #c8c8c8;
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: 99;
+		}
+		.ebs_eBookContext_swiper{
+			width: 100%;
+			height: 100%;
+		}
+		.swiper-item{
+			width: 100%;
+			height: 100%;
+		}
+		.swiper-item-view{
+			width: 100%;
+			height: 100%;
+			padding-top: 80rpx;
+			background: #fff;
+		}
+		.u-tabs-scorll-flex{
+			flex-direction: row;
+		}
+		.ebs_eBookContext_introduction{
+			width: 100%;
+			padding: 20rpx 30rpx 20rpx;
+			background: #fff;
+		}
+		.noSection{
+			@include setBackground('noSection.png');
+			background-size: 539rpx 342rpx;
+			background-color: #fff;
+			background-position: center center;
+		}
+		.ebs_noData{
+			display: none;
+		}
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+}
+</style>

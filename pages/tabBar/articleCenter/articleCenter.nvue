@@ -1,15 +1,316 @@
 <template>
-	<view class="articleCenter">
-		<text>这是文章中心页面</text>
+	<view class="articleCenter"  :style="'margin-top:' + (height + 44) + 'px'">
+		<header-fix title="新闻中心" :height="height">
+			<view class="ac_centertop_btn">
+				<view class="ac_centertop_btn_type" @click="openList">
+					<image src="../../../static/list.png"></image>
+				</view>
+				<view class="ac_centertop_btn_centerline"></view>
+				<view class="ac_centertop_btn_search" @click="linkToSearch">
+					<image src="../../../static/fangdajing.png"></image>
+				</view>
+			</view>
+		</header-fix>
+		<view class="ac_articleList" :class="{ 'ac_articlelist_open': channelType }">
+			<scroll-view class="ac_channnelpart" scroll-y :style="'height:' + (winH - (height + 44)) + 'px'">
+				<view class="ac_cp_typeitem" v-for="(item, index) in articleChannel" :key="index" @click="typeSearch(item.Id)">
+					<text v-text="item.Name"></text>
+				</view>
+			</scroll-view>
+			<scroll-view class="ac_svpart" :class="{ 'ac_noDataBg': noDataBg }" scroll-y @scrolltolower="GetArticleInfoList" :style="'height:' + (winH - (height + 44)) + 'px'">
+				<article-item v-for="(item, index) in articleList" :key="index" :articleInfo="item"></article-item>
+				<u-loadmore :class="{ 'as_noData': noDataBg }" :status="status"/>
+			</scroll-view>
+			<view class="ac_coverbg" :class="{ 'disNone': channelType, 'boxDisappear': !channelType }" @click="openList"></view>
+		</view>
 	</view>
 </template>
 
 <script>
-	export default {
-		
+import headerFix from '../../../components/headerFix/headerFix.nvue';
+import articleItem from '../../../components/articleItem/articleItem.nvue';
+import { GetArticleChannelInfoList, GetArticleInfoList } from '../../../common/getData.js';
+import { imgAddress } from '../../../common/plugin.js';
+export default {
+	name: 'articleCenter',
+	data () {
+		return {
+			winH: '',
+			height: '',
+			articleList: [],
+			totalCount: 0,
+			articleChannel: [],
+			selectChannel: '',
+			articleType: '',
+			channelType: false,
+			noDataBg: true,
+			inTheEnd: false,
+			Page: 1,
+			Rows: 10,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+		this.GetArticleChannelInfoList()
+		this.GetArticleInfoList()
+	},
+	onHide () {
+		this.channelType = false
+	},
+	methods: {
+		openList () {
+			this.channelType = !this.channelType
+		},
+		typeSearch (index) {
+			this.selectChannel = index
+			this.articleList = []
+			this.noDataBg = true
+			this.inTheEnd = false
+			this.channelType = false
+			this.status = 'loading'
+			this.Page = 1
+			this.GetArticleInfoList()
+		},
+		linkToSearch () {
+			uni.navigateTo({
+				url: '/articleCenter/articleSearch/articleSearch'
+			})
+		},
+		async GetArticleChannelInfoList () {
+			let msg = await GetArticleChannelInfoList({
+				CategoryId: ''
+			})
+			if (msg.Type == 1) {
+				let obj = {
+					Name: '全部',
+					Id: ''
+				}
+				msg.Data.ArticleCategoryResult.unshift(obj)
+				this.articleChannel = msg.Data.ArticleCategoryResult
+			}
+		},
+		async GetArticleInfoList () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetArticleInfoList({
+				CategoryId: this.selectChannel,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length != 0) {
+					this.noDataBg = false
+				} else {
+					return false
+				}
+				msg.Data.List.forEach(item => {
+					item.ArticleImg = item.ArticleImg ? imgAddress(item.ArticleImg) : require('../../../static/error-img.png')
+				})
+				this.articleList = [...this.articleList, ...msg.Data.List]
+				if (this.articleList.length == this.totalCount) {
+					this.status = 'nomore',
+					this.inTheEnd = true
+				}
+				this.Page +=1
+			}
+		}
+	},
+	components: {
+		headerFix,
+		articleItem
 	}
+}
 </script>
 
 <style lang="scss">
-
+@import '../../../style/mixin.scss';
+.articleCenter{
+	width: 100%;
+	background: #fff;
+	.ac_centertop_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.ac_centertop_btn_type{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+		.ac_centertop_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.ac_centertop_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+	.ac_articleList{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		transform: translateX(-65%);
+		transition: 0.3s;
+		.ac_channnelpart{
+			width:65%;
+			padding-left: 20rpx;
+			background: #fff;
+			.ac_cp_typeitem{
+				width:100%;
+				height: 80rpx;
+				line-height: 80rpx;
+				font-size: 32rpx;
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				text{
+					font-size: 32rpx;
+				}
+			}
+		}
+		.ac_svpart{
+			width: 100%;
+			.ac_svpart_inner{
+				padding-top: 15rpx;
+			}
+		}
+		.as_noData{
+			display: none;
+		}
+		.u-load-more-wrap{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-around;
+		}
+		.u-load-more-inner{
+			flex-direction: row;
+			align-items: center;
+			height: 80rpx;
+		}
+		.disNone{
+			display: block;
+			-webkit-animation-name: listIn; /*动画名称*/
+			-webkit-animation-duration: 0.3s; /*动画持续时间*/
+			-webkit-animation-iteration-count: 1; /*动画次数*/
+			-webkit-animation-delay: 0s; /*延迟时间*/
+			-webkit-animation-fill-mode: forwards;
+		}
+		.boxDisappear{
+			display: block;
+			-webkit-animation-name: listOut; /*动画名称*/
+			-webkit-animation-duration: 0.3s; /*动画持续时间*/
+			-webkit-animation-iteration-count: 1; /*动画次数*/
+			-webkit-animation-delay: 0s; /*延迟时间*/
+			-webkit-animation-fill-mode: forwards;
+		}
+	}
+	.ac_coverbg{
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.7);
+		position: absolute;
+		bottom: 0;
+		left: 65%;
+		opacity: 0;
+		display: none;
+		z-index: 99;
+	}
+	.ac_articlelist_open{
+		transform: translateX(0);
+	}
+	.ac_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+}
+@-webkit-keyframes listIn {
+	0% {
+		opacity: 0;
+	}
+	20%{
+		opacity: .2;
+	}
+	50% {
+		opacity: .5;
+	}
+	70%{
+		opacity: .7;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+@-webkit-keyframes listOut {
+	0% {
+		visibility: visible;
+		height: 100%;
+		opacity: 1;
+	}
+	20% {
+		visibility: visible;
+		height: 100%;
+		opacity: .8;
+	}
+	50%{
+		visibility: visible;
+		height: 100%;
+		opacity: .5;
+	}
+	70%{
+		visibility: visible;
+		height: 100%;
+		opacity: .3;
+	}
+	99% {
+		visibility: visible;
+		height: 100%;
+		opacity: 0;
+	}
+	100%{
+		visibility: hidden;
+		height: 0;
+		opacity: 0;
+	}
+}
 </style>

@@ -1,0 +1,318 @@
+<template>
+	<view class="trainList" :style="'margin-top:' + (height + 44) + 'px'">
+		<header-fix title="培训班列表" :height="height">
+			<view class="tl_btn">
+				<view class="tl_btn_goback" @click="goBack">
+					<image src="../../static/fanhui.png"></image>
+				</view>
+				<view class="tl_btn_centerline"></view>
+				<view class="tl_btn_search" @click="typeList">
+					<image src="../../static/list.png"></image>
+				</view>
+			</view>
+		</header-fix>
+		<view class="tl_trainCourseList" :class="{ 'tl_tcl_channelType': channelType }">
+			<scroll-view class="tl_tcl_typeList" scroll-y :style="'height:' + (winH - (height + 44)) + 'px'">
+				<view
+					class="tl_tl_item"
+					v-for="(item, index) in channelList"
+					:key="index"
+					@click="changeType(item)"
+				>
+					<text class="tl_tl_name" :class="{ 'tl_tl_name_beselect': item.TypeId == channelId }" v-text="item.TypeName"></text>
+				</view>
+			</scroll-view>
+			<scroll-view class="tl_tcl_contentList" :class="{ 'tl_noDataBg': noDataBg }" scroll-y :style="'height:' + (winH - (height + 44)) + 'px'" @scrolltolower="GetTrainingClass">
+				<view class="tl_tcl_cl_inner">
+					<train-list-item v-for="(item, index) in trainList" :key="index" :trainInfo="item"></train-list-item>
+					<u-loadmore :class="{ 'tl_tcl_noData': noDataBg }" :status="status"/>
+				</view>
+			</scroll-view>
+			<view class="tl_coverbg" :class="{ 'disNone': channelType, 'boxDisappear': !channelType }" @click="typeList"></view>
+		</view>
+	</view>
+</template>
+
+<script>
+import headerFix from '../../components/headerFix/headerFix.nvue';
+import trainListItem from '../../components/trainListItem/trainListItem.nvue';
+import { GetTrainingTypeList, GetTrainingClass } from '../../common/getData.js';
+export default {
+	name: 'trainList',
+	data () {
+		return {
+			height: '',
+			winH: '',
+			channelList: [],
+			channelId: '',
+			channelType: false,
+			trainList: [],
+			totalCount: 0,
+			noDataBg: true,
+			inTheEnd: false,
+			Page: 1,
+			Rows: 10,
+			status: 'loading',
+			loadText: {
+				loading: '加载中',
+				nomore: '没有更多的内容了'
+			}
+		}
+	},
+	onLoad () {
+		wx.getSystemInfo({
+			success: ( res ) => { // 用这种方法调用，this指向Page
+				this.winH = res.windowHeight
+				this.height = res.statusBarHeight
+			}
+		})
+	},
+	onShow () {
+		this.GetTrainingTypeList()
+		this.GetTrainingClass()
+	},
+	methods: {
+		goBack () {
+			uni.switchTab({
+				url: '/pages/tabBar/index/index'
+			})
+		},
+		typeList () {
+			this.channelType = !this.channelType
+		},
+		changeType (item) {
+			this.channelId = item.TypeId
+			this.totalCount = 0
+			this.Page = 1
+			this.inTheEnd = false
+			this.noDataBg = true
+			this.status = 'loading'
+			this.channelType = false
+			this.trainList = []
+			this.GetTrainingClass()
+		},
+		async GetTrainingTypeList () {
+			let msg = await GetTrainingTypeList()
+			if (msg.Type == 1) {
+				let obj = {
+					TypeName: '全部',
+					TypeId: ''
+				}
+				msg.Data.TrainClassList.unshift(obj)
+				this.channelList = msg.Data.TrainClassList
+			}
+		},
+		async GetTrainingClass () {
+			if (this.inTheEnd) {
+				return false
+			}
+			let msg = await GetTrainingClass({
+				TypeId: this.channelId,
+				Page: this.Page,
+				Rows: this.Rows
+			})
+			if (msg.Type === 1) {
+				this.totalCount = msg.Data.TotalCount
+				if (msg.Data.List.length == 0 && this.Page == 1) {
+					return
+				}
+				this.noDataBg = false
+				msg.Data.List.forEach(item => {
+					item.StartDate = item.StartDate.substr(0, 10)
+					item.SignEndDate = item.SignEndDate.substr(0, 10)
+					item.EndDate = item.EndDate.substr(0, 10)
+				})
+				this.trainList = [...this.trainList, ...msg.Data.List]
+				if (this.trainList.length == this.totalCount) {
+					this.status = 'nomore'
+					this.inTheEnd = true
+				}
+				this.Page += 1
+			}
+		}
+	},
+	components: {
+		headerFix,
+		trainListItem
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.trainList{
+	width: 100%;
+	overflow: hidden;
+	.tl_btn{
+		width: 81px;
+		height: 30px;
+		margin: auto;
+		border: 1rpx solid #999;
+		border-radius: 58rpx;
+		background: rgba(0,0,0,0.2);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		.tl_btn_goback{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 13px;
+				height: 13px;
+			}
+		}
+		.tl_btn_centerline{
+			width: 1px;
+			height: 18px;
+			background: #fff;
+		}
+		.tl_btn_search{
+			width: 40px;
+			height: 30px;
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			image{
+				width: 16px;
+				height: 16px;
+			}
+		}
+	}
+	.tl_trainCourseList{
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		transform: translateX(-65%);
+		transition: 0.3s;
+	}
+	.tl_tcl_typeList{
+		width:65%;
+		background: #fff;
+		.tl_tl_item{
+			width: 100%;
+			height: 80rpx;
+			line-height: 80rpx;
+			padding-left: 20rpx;
+			border-bottom: 1rpx solid #e8e8e8;
+			font-size: 32rpx;
+			.tl_tl_name_beselect{
+				color: $brand-primary;
+			}
+		}
+	}
+	.tl_tcl_contentList{
+		width: 100%;
+	}
+	.tl_tcl_channelType{
+		transform: translateX(0);
+	}
+	.tl_tcl_noData{
+		display: none;
+	}
+	.u-load-more-wrap{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+		background-color: transparent!important;
+	}
+	.u-more-text{
+		background-color: #e8e8e8!important;
+	}
+	.u-load-more-inner{
+		flex-direction: row;
+		align-items: center;
+		height: 80rpx;
+	}
+	.tl_noDataBg{
+		@include setBackground('no_data.png');
+		background-size: 254rpx 402rpx;
+		background-position: center center;
+	}
+	.tl_coverbg{
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.7);
+		position: absolute;
+		bottom: 0;
+		left: 65%;
+		opacity: 0;
+		display: none;
+	}
+	.disNone{
+		display: block;
+		-webkit-animation-name: listIn; /*动画名称*/
+		-webkit-animation-duration: 0.3s; /*动画持续时间*/
+		-webkit-animation-iteration-count: 1; /*动画次数*/
+		-webkit-animation-delay: 0s; /*延迟时间*/
+		-webkit-animation-fill-mode: forwards;
+	}
+	.boxDisappear{
+		display: block;
+		-webkit-animation-name: listOut; /*动画名称*/
+		-webkit-animation-duration: 0.3s; /*动画持续时间*/
+		-webkit-animation-iteration-count: 1; /*动画次数*/
+		-webkit-animation-delay: 0s; /*延迟时间*/
+		-webkit-animation-fill-mode: forwards;
+	}
+}
+@-webkit-keyframes listIn {
+	0% {
+		opacity: 0;
+	}
+	20%{
+		opacity: .2;
+	}
+	50% {
+		opacity: .5;
+	}
+	70%{
+		opacity: .7;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+@-webkit-keyframes listOut {
+	0% {
+		visibility: visible;
+		height: 100%;
+		opacity: 1;
+	}
+	20% {
+		visibility: visible;
+		height: 100%;
+		opacity: .8;
+	}
+	50%{
+		visibility: visible;
+		height: 100%;
+		opacity: .5;
+	}
+	70%{
+		visibility: visible;
+		height: 100%;
+		opacity: .3;
+	}
+	99% {
+		visibility: visible;
+		height: 100%;
+		opacity: 0;
+	}
+	100%{
+		visibility: hidden;
+		height: 0;
+		opacity: 0;
+	}
+}
+</style>

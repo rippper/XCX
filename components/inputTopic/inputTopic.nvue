@@ -14,21 +14,20 @@ export default {
 	},
 	props: {
 		Answer: [String, Array],
-		topicIndex: [String, Number]
-	},
-	onShow () {
-		if (this.Answer != 'none') {
-			this.detail = this.Answer
-		}
+		topicIndex: [String, Number],
+		topicType: String
 	},
 	methods: {
 		textareaInput (e) {
-			console.log(e.detail.value)
+			// console.log(e.detail.value)
 			this.$emit('inputChange', e.detail.value)
 		}
 	},
 	watch: {
 		topicIndex (val) {
+			if (this.topicType !== '简答题') {
+				return false
+			}
 			this.detail = ''
 			if (this.Answer != 'none' && !Array.isArray(this.Answer)) {
 				this.detail = this.Answer

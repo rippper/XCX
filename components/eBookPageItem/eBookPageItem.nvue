@@ -1,0 +1,55 @@
+<template>
+	<view class="eBookPageItem" @click="linkToContext(eBookInfo)">
+		<view class="ebpi_imgbox">
+			<image :src="eBookInfo.BookImg"></image>
+		</view>
+		<view class="ebpi_imgtitle" v-text="eBookInfo.BookName"></view>
+	</view>
+</template>
+
+<script>
+export default {
+	name: 'eBookPageItem',
+	data () {
+		return {
+			
+		}
+	},
+	props: {
+		eBookInfo: Object
+	},
+	methods: {
+		linkToContext (obj) {
+			uni.setStorageSync('eBookMsg', JSON.stringify(obj))
+			uni.navigateTo({
+				url: '/eBookCenter/eBookSection/eBookSection'
+			})
+		}
+	}
+}
+</script>
+
+<style lang="scss">
+@import '../../style/mixin.scss';
+.eBookPageItem{
+	width: 230rpx;
+	margin-top: 15rpx;
+	.ebpi_imgbox{
+		width: 100%;
+		image{
+			width: 210rpx;
+			height: 300rpx;
+			margin: 0 auto;
+		}
+	}
+	.ebpi_imgtitle{
+		line-height: 40rpx;
+		max-height: 80rpx;
+		margin-top: 10rpx;
+		text-align: center;
+		font-size: 32rpx;
+		@include ellipsis_two;
+	}
+}
+		
+</style>
